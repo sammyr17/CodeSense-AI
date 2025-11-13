@@ -246,6 +246,8 @@ Focus on: syntax errors, logic issues, best practices, performance, and expected
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(request.code)
             
+            logger.debug(f"Saved code to file: {repr(request.code[:100])}")  # Debug log
+            
             # Save submission to database
             create_code_submission(
                 db=db,
@@ -333,6 +335,7 @@ async def get_submission(
         try:
             with open(submission.file_path, 'r', encoding='utf-8') as f:
                 code_content = f.read()
+            logger.debug(f"Read code from file: {repr(code_content[:100])}")  # Debug log
         except FileNotFoundError:
             code_content = "Code file not found"
         
