@@ -1024,7 +1024,7 @@ function CodeSenseAI() {
                                         <span>Code Output</span>
                                     </h3>
                                     <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm text-gray-800 whitespace-pre-wrap">
-                                        {analysisResult.output}
+                                        {analysisResult.output || "No output predicted"}
                                     </div>
                                 </div>
 

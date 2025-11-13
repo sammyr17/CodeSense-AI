@@ -121,10 +121,17 @@ Return exactly this JSON format:
   "errors": [{{"line": number, "message": "error description", "severity": "error|warning|info"}}],
   "suggestions": ["suggestion text"],
   "optimizations": ["optimization text"],
-  "output": "expected output or 'No output detected'"
+  "output": "predicted program output"
 }}
 
-Focus on: syntax errors, logic issues, best practices, performance, and expected output. Be concise."""
+Instructions:
+1. Check for syntax errors, logic issues, and best practices
+2. For the "output" field: If the code contains print statements, loops, or calculations, predict what would be printed to console when executed
+3. If the code doesn't produce console output, set output to "No console output"
+4. For loops, show the expected iteration results
+5. Be precise with output prediction - show exactly what would appear in the terminal
+
+Example: For a loop that prints numbers, show each line that would be printed."""
 
     try:
         # Use a specific model instead of listing all models
@@ -150,54 +157,103 @@ Focus on: syntax errors, logic issues, best practices, performance, and expected
         api_duration = api_end_time - api_start_time
         logger.info(f"Gemini API returned response successfully in {api_duration:.2f} seconds")
 
-        # Extract the generated text from Gemini's response
-        if not response.text:
+        # Check if response was blocked or has issues
+        if not response.candidates:
+            logger.error("No candidates returned from Gemini API")
             raise HTTPException(
                 status_code=500,
-                detail="Invalid response from Gemini API"
+                detail="No response candidates from Gemini API"
             )
-
-        generated_text = response.text
         
-        # Safe logging for Windows console
-        try:
-            safe_text = generated_text[:100]
-            logger.debug(f"Generated text (first 100 chars): {safe_text}")
-        except Exception as e:
-            logger.debug(f"Generated text received (encoding safe): {e}")
+        candidate = response.candidates[0]
         
-        # Ensure generated_text is a string for regex and parsing
-        if not isinstance(generated_text, str):
-            generated_text = json.dumps(generated_text)
-
-        # Extract JSON from the response (handle code blocks)
-        try:
-            json_match = (
-                re.search(r'```json\n([\s\S]*?)\n```', generated_text) or
-                re.search(r'```\n([\s\S]*?)\n```', generated_text) or
-                None
-            )
-            
-            if json_match:
-                json_string = json_match.group(1)
-            else:
-                json_string = generated_text
-            
-            # json_string must be a string here; attempt to parse
-            if isinstance(json_string, str):
-                analysis_result = json.loads(json_string)
-            else:
-                analysis_result = {"output": str(json_string)}
-        except (json.JSONDecodeError, AttributeError) as parse_error:
-            safe_error = str(parse_error)
-            logger.warning(f"Failed to parse Gemini response as JSON: {safe_error}")
-            # Fallback response structure
+        # Check finish reason
+        if candidate.finish_reason == 2:  # SAFETY
+            logger.warning("Gemini response blocked due to safety filters")
+            # Return a safe fallback response
             analysis_result = {
                 "errors": [],
-                "suggestions": ["AI analysis failed to parse. Please check your code syntax."],
-                "optimizations": ["Consider reviewing your code structure."],
-                "output": "Analysis unavailable"
+                "suggestions": ["Code analysis was blocked by safety filters. Please ensure your code doesn't contain sensitive content."],
+                "optimizations": ["Try simplifying your code or removing any potentially sensitive content."],
+                "output": "Analysis blocked by safety filters"
             }
+        elif candidate.finish_reason == 3:  # RECITATION
+            logger.warning("Gemini response blocked due to recitation")
+            analysis_result = {
+                "errors": [],
+                "suggestions": ["Code analysis was blocked due to content similarity. Try modifying your code slightly."],
+                "optimizations": ["Consider using different variable names or restructuring your code."],
+                "output": "Analysis blocked due to content similarity"
+            }
+        elif candidate.finish_reason != 1:  # Not STOP (successful completion)
+            logger.warning(f"Gemini response finished with reason: {candidate.finish_reason}")
+            analysis_result = {
+                "errors": [],
+                "suggestions": ["Code analysis completed with warnings. Results may be incomplete."],
+                "optimizations": ["Try running the analysis again or simplifying your code."],
+                "output": "Analysis completed with warnings"
+            }
+        else:
+            # Normal successful response
+            try:
+                generated_text = response.text
+            except ValueError as e:
+                logger.error(f"Failed to extract text from Gemini response: {e}")
+                analysis_result = {
+                    "errors": [],
+                    "suggestions": ["Unable to extract analysis results from AI response."],
+                    "optimizations": ["Try running the analysis again."],
+                    "output": "Unable to extract analysis results"
+                }
+            else:
+                # Safe logging for Windows console
+                try:
+                    safe_text = generated_text[:100]
+                    logger.debug(f"Generated text (first 100 chars): {safe_text}")
+                except Exception as e:
+                    logger.debug(f"Generated text received (encoding safe): {e}")
+                
+                # Ensure generated_text is a string for regex and parsing
+                if not isinstance(generated_text, str):
+                    generated_text = json.dumps(generated_text)
+
+                # Extract JSON from the response (handle code blocks)
+                try:
+                    json_match = (
+                        re.search(r'```json\n([\s\S]*?)\n```', generated_text) or
+                        re.search(r'```\n([\s\S]*?)\n```', generated_text) or
+                        None
+                    )
+                    
+                    if json_match:
+                        json_string = json_match.group(1)
+                    else:
+                        json_string = generated_text
+                    
+                    # json_string must be a string here; attempt to parse
+                    if isinstance(json_string, str):
+                        analysis_result = json.loads(json_string)
+                    else:
+                        analysis_result = {"output": str(json_string)}
+                except (json.JSONDecodeError, AttributeError) as parse_error:
+                    safe_error = str(parse_error)
+                    logger.warning(f"Failed to parse Gemini response as JSON: {safe_error}")
+                    logger.debug(f"Raw Gemini response: {repr(generated_text[:500])}")
+                    
+                    # Try to extract useful information from the raw response
+                    output_prediction = "Unable to predict output"
+                    if "print" in request.code.lower() or "console.log" in request.code.lower():
+                        output_prediction = "Code contains output statements but prediction failed"
+                    elif any(keyword in request.code.lower() for keyword in ["for", "while", "loop"]):
+                        output_prediction = "Code contains loops but output prediction failed"
+                    
+                    # Fallback response structure
+                    analysis_result = {
+                        "errors": [],
+                        "suggestions": ["AI analysis completed but response format was unexpected."],
+                        "optimizations": ["Consider reviewing your code structure."],
+                        "output": output_prediction
+                    }
         
         # Ensure the response has the expected structure
         errors_list = []
@@ -222,7 +278,7 @@ Focus on: syntax errors, logic issues, best practices, performance, and expected
                 if isinstance(analysis_result.get("optimizations"), list)
                 else ["No optimizations suggested"]
             ),
-            "output": analysis_result.get("output", "No output detected")
+            "output": analysis_result.get("output", "No console output predicted")
         }
         
         logger.debug(f"Final analysis result: {result}")
@@ -248,7 +304,7 @@ Focus on: syntax errors, logic issues, best practices, performance, and expected
             
             logger.debug(f"Saved code to file: {repr(request.code[:100])}")  # Debug log
             
-            # Save submission to database
+            # Save submission to databases
             create_code_submission(
                 db=db,
                 user_id=current_user.id,
