@@ -2,13 +2,23 @@
 CodeSense AI - API Routes
 Handles code analysis requests using Google Gemini AI
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import os
 import json
 import re
+import uuid
+import time
+from datetime import datetime
 from typing import Optional, List, Dict
+from sqlalchemy.orm import Session
+from database import get_db, create_code_submission, get_user_submissions, get_submission_by_id, CodeSubmission
+from auth import get_current_user, User
+from logger_config import setup_logging
+
+# Set up logging
+logger = setup_logging(__name__)
 
 # Import Google Generative AI SDK
 try:
@@ -63,7 +73,11 @@ async def debug_models():
 
 
 @router.post("/analyze")
-async def analyze_code(request: CodeAnalysisRequest):
+async def analyze_code(
+    request: CodeAnalysisRequest, 
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
     Analyze code using Google Gemini AI
 
@@ -96,69 +110,45 @@ async def analyze_code(request: CodeAnalysisRequest):
     # Configure Gemini API
     genai.configure(api_key=gemini_api_key)
     
-    prompt = f"""Analyze the following {request.language} code and provide a comprehensive analysis in JSON format. 
+    prompt = f"""Analyze this {request.language} code and return JSON:
 
-Code to analyze:
 ```{request.language}
 {request.code}
 ```
 
-Please provide your response in this exact JSON structure:
+Return exactly this JSON format:
 {{
-  "errors": [
-    {{
-      "line": number,
-      "message": "description of the error",
-      "severity": "error" | "warning" | "info"
-    }}
-  ],
-  "suggestions": [
-    "suggestion 1",
-    "suggestion 2"
-  ],
-  "optimizations": [
-    "optimization 1",
-    "optimization 2"
-  ],
+  "errors": [{{"line": number, "message": "error description", "severity": "error|warning|info"}}],
+  "suggestions": ["suggestion text"],
+  "optimizations": ["optimization text"],
   "output": "expected output or 'No output detected'"
 }}
 
-Focus on:
-1. Syntax errors, logic errors, and potential runtime issues
-2. Best practices and code quality improvements  
-3. Performance optimizations and cleaner code suggestions
-4. What the code output would be (if any print/console statements exist)
-
-Be thorough but concise. Only include actual issues, not hypothetical ones."""
+Focus on: syntax errors, logic issues, best practices, performance, and expected output. Be concise."""
 
     try:
-        # Get the first available model that supports generateContent
-        available_models = []
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                available_models.append(m.name)
-        
-        if not available_models:
-            raise HTTPException(
-                status_code=500,
-                detail="No available Gemini models found that support generateContent"
-            )
-        
-        # Use the first available model
-        model_name = available_models[0]
-        print(f"Using model: {model_name}")
+        # Use a specific model instead of listing all models
+        # This avoids the API call to list_models() which adds latency
+        model_name = "models/gemini-flash-latest"  # Available model
+        logger.info(f"Using Gemini model: {model_name}")
         model = genai.GenerativeModel(model_name)
 
-        print("Calling Gemini API...")
+        logger.info("Calling Gemini API...")
+        api_start_time = time.time()
 
-        # Call Gemini API
+        # Call Gemini API with optimized settings for speed
         response = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
-                max_output_tokens=4096,
+                max_output_tokens=1024,  # Reduced from 4096 for faster response
                 temperature=0.1,
+                candidate_count=1,  # Only generate one response
             )
         )
+
+        api_end_time = time.time()
+        api_duration = api_end_time - api_start_time
+        logger.info(f"Gemini API returned response successfully in {api_duration:.2f} seconds")
 
         # Extract the generated text from Gemini's response
         if not response.text:
@@ -168,14 +158,13 @@ Be thorough but concise. Only include actual issues, not hypothetical ones."""
             )
 
         generated_text = response.text
-        print(f"[SUCCESS] Gemini API returned response")
         
-        # Safe print for Windows console
+        # Safe logging for Windows console
         try:
             safe_text = generated_text[:100]
-            print(f"Generated text (first 100 chars): {safe_text}")
-        except:
-            print("Generated text received (encoding safe)")
+            logger.debug(f"Generated text (first 100 chars): {safe_text}")
+        except Exception as e:
+            logger.debug(f"Generated text received (encoding safe): {e}")
         
         # Ensure generated_text is a string for regex and parsing
         if not isinstance(generated_text, str):
@@ -201,7 +190,7 @@ Be thorough but concise. Only include actual issues, not hypothetical ones."""
                 analysis_result = {"output": str(json_string)}
         except (json.JSONDecodeError, AttributeError) as parse_error:
             safe_error = str(parse_error)
-            print(f"Failed to parse Gemini response as JSON: {safe_error}")
+            logger.warning(f"Failed to parse Gemini response as JSON: {safe_error}")
             # Fallback response structure
             analysis_result = {
                 "errors": [],
@@ -236,11 +225,47 @@ Be thorough but concise. Only include actual issues, not hypothetical ones."""
             "output": analysis_result.get("output", "No output detected")
         }
         
-        print(f"Final analysis result: {result}")
+        logger.debug(f"Final analysis result: {result}")
+        
+        # Save code submission to file and database
+        try:
+            # Create unique filename
+            submission_id = str(uuid.uuid4())
+            file_extension = {
+                'javascript': '.js',
+                'python': '.py',
+                'java': '.java',
+                'cpp': '.cpp',
+                'go': '.go'
+            }.get(request.language, '.txt')
+            
+            filename = f"{submission_id}{file_extension}"
+            file_path = os.path.join("submissions", filename)
+            
+            # Save code to file
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(request.code)
+            
+            # Save submission to database
+            create_code_submission(
+                db=db,
+                user_id=current_user.id,
+                language=request.language,
+                file_path=file_path,
+                analysis_result=json.dumps(result),
+                file_name=getattr(request, 'filename', None)
+            )
+            
+            logger.info(f"Saved submission to: {file_path}")
+            
+        except Exception as save_error:
+            logger.warning(f"Failed to save submission: {save_error}")
+            # Don't fail the analysis if saving fails
+        
         return JSONResponse(status_code=200, content=result)
             
     except HTTPException as he:
-        print(f"[ERROR] HTTPException: {he.detail}")
+        logger.error(f"HTTPException in analyze endpoint: {he.detail}")
         return JSONResponse(status_code=he.status_code, content={
             "detail": f"{he.detail}",
             "errors": [{"line": 1, "message": f"{he.detail}", "severity": "error"}],
@@ -252,9 +277,8 @@ Be thorough but concise. Only include actual issues, not hypothetical ones."""
         import traceback
         error_trace = traceback.format_exc()
         error_msg = str(error)
-        print(f"[ERROR] Error in analyze-code function:")
-        print(f"[ERROR] {error_msg}")
-        print(f"[ERROR] Traceback:\n{error_trace}")
+        logger.error(f"Error in analyze-code function: {error_msg}")
+        logger.error(f"Traceback:\n{error_trace}")
         return JSONResponse(status_code=500, content={
             "detail": f"Internal server error: {error_msg}",
             "errors": [{"line": 1, "message": f"Internal server error: {error_msg}", "severity": "error"}],
@@ -262,3 +286,77 @@ Be thorough but concise. Only include actual issues, not hypothetical ones."""
             "optimizations": ["None"],
             "output": "Analysis error"
         })
+
+
+# Submission history endpoints
+@router.get("/submissions")
+async def get_submissions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all submissions for the current user"""
+    try:
+        submissions = get_user_submissions(db, current_user.id)
+        
+        # Convert to response format
+        submission_list = []
+        for submission in submissions:
+            submission_data = {
+                "id": submission.id,
+                "language": submission.language,
+                "created_at": submission.created_at.isoformat(),
+                "file_name": submission.file_name or f"submission.{submission.language}"
+            }
+            submission_list.append(submission_data)
+        
+        return JSONResponse(status_code=200, content={"submissions": submission_list})
+        
+    except Exception as e:
+        logger.error(f"Error fetching submissions: {e}")
+        return JSONResponse(status_code=500, content={"error": "Failed to fetch submissions"})
+
+
+@router.get("/submissions/{submission_id}")
+async def get_submission(
+    submission_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a specific submission with code and analysis results"""
+    try:
+        submission = get_submission_by_id(db, submission_id, current_user.id)
+        
+        if not submission:
+            raise HTTPException(status_code=404, detail="Submission not found")
+        
+        # Read code from file
+        try:
+            with open(submission.file_path, 'r', encoding='utf-8') as f:
+                code_content = f.read()
+        except FileNotFoundError:
+            code_content = "Code file not found"
+        
+        # Parse analysis result
+        analysis_result = {}
+        if submission.analysis_result:
+            try:
+                analysis_result = json.loads(submission.analysis_result)
+            except json.JSONDecodeError:
+                analysis_result = {"error": "Failed to parse analysis result"}
+        
+        response_data = {
+            "id": submission.id,
+            "language": submission.language,
+            "code": code_content,
+            "analysis_result": analysis_result,
+            "created_at": submission.created_at.isoformat(),
+            "file_name": submission.file_name or f"submission.{submission.language}"
+        }
+        
+        return JSONResponse(status_code=200, content=response_data)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching submission {submission_id}: {e}")
+        return JSONResponse(status_code=500, content={"error": "Failed to fetch submission"})

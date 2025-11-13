@@ -5,6 +5,10 @@ Run this script to create the database and tables
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from database import create_database_and_tables, test_database_connection
+from logger_config import setup_logging
+
+# Set up logging
+logger = setup_logging(__name__)
 
 def create_database():
     """Create the codesense_ai database if it doesn't exist"""
@@ -25,20 +29,20 @@ def create_database():
         
         if not exists:
             cursor.execute("CREATE DATABASE codesense_ai")
-            print("✅ Database 'codesense_ai' created successfully")
+            logger.info("Database 'codesense_ai' created successfully")
         else:
-            print("✅ Database 'codesense_ai' already exists")
+            logger.info("Database 'codesense_ai' already exists")
         
         cursor.close()
         conn.close()
         return True
         
     except Exception as e:
-        print(f"❌ Error creating database: {e}")
+        logger.error(f"Error creating database: {e}")
         return False
 
 if __name__ == "__main__":
-    print("🔧 Setting up CodeSense AI database...")
+    logger.info("Setting up CodeSense AI database...")
     
     # Step 1: Create database
     if create_database():
@@ -46,8 +50,8 @@ if __name__ == "__main__":
         if test_database_connection():
             # Step 3: Create tables
             create_database_and_tables()
-            print("🎉 Database setup completed successfully!")
+            logger.info("Database setup completed successfully!")
         else:
-            print("❌ Failed to connect to database")
+            logger.error("Failed to connect to database")
     else:
-        print("❌ Failed to create database")
+        logger.error("Failed to create database")

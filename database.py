@@ -8,8 +8,11 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.sql import func
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from typing import Optional
-import logging
+from typing import Optional, List
+from logger_config import setup_logging
+
+# Set up logging
+logger = setup_logging(__name__)
 
 # Database URL from environment or default
 DATABASE_URL = os.getenv(
@@ -44,6 +47,18 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     last_login = Column(DateTime(timezone=True), nullable=True)
+
+# Code Submission model
+class CodeSubmission(Base):
+    __tablename__ = "code_submissions"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)  # Foreign key to users table
+    language = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)  # Path to the stored code file
+    analysis_result = Column(String, nullable=True)  # JSON string of analysis results
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    file_name = Column(String, nullable=True)  # Original filename if uploaded
 
 # Database dependency
 def get_db():
@@ -109,10 +124,10 @@ def create_database_and_tables():
     try:
         # Create all tables
         Base.metadata.create_all(bind=engine)
-        print("✅ Database tables created successfully")
+        logger.info("Database tables created successfully")
         return True
     except Exception as e:
-        print(f"❌ Error creating database tables: {e}")
+        logger.error(f"Error creating database tables: {e}")
         return False
 
 def test_database_connection():
@@ -122,17 +137,53 @@ def test_database_connection():
         # Try to execute a simple query with explicit text declaration
         db.execute(text("SELECT 1"))
         db.close()
-        print("✅ Database connection successful")
+        logger.info("Database connection successful")
         return True
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
+        logger.error(f"Database connection failed: {e}")
         return False
+
+# Code submission management functions
+def create_code_submission(db: Session, user_id: int, language: str, file_path: str, 
+                          analysis_result: str = None, file_name: str = None) -> CodeSubmission:
+    """Create a new code submission record"""
+    submission = CodeSubmission(
+        user_id=user_id,
+        language=language,
+        file_path=file_path,
+        analysis_result=analysis_result,
+        file_name=file_name
+    )
+    db.add(submission)
+    db.commit()
+    db.refresh(submission)
+    return submission
+
+def get_user_submissions(db: Session, user_id: int, limit: int = 50) -> List[CodeSubmission]:
+    """Get all submissions for a user, ordered by creation date (newest first)"""
+    return db.query(CodeSubmission).filter(
+        CodeSubmission.user_id == user_id
+    ).order_by(CodeSubmission.created_at.desc()).limit(limit).all()
+
+def get_submission_by_id(db: Session, submission_id: int, user_id: int) -> Optional[CodeSubmission]:
+    """Get a specific submission by ID, ensuring it belongs to the user"""
+    return db.query(CodeSubmission).filter(
+        CodeSubmission.id == submission_id,
+        CodeSubmission.user_id == user_id
+    ).first()
 
 if __name__ == "__main__":
     # Test database connection and create tables
-    print("Testing database connection...")
+    logger.info("Testing database connection...")
     if test_database_connection():
-        print("Creating database tables...")
+        logger.info("Creating database tables...")
         create_database_and_tables()
+        
+        # Test password hashing
+        logger.info("Testing password hashing...")
+        test_password = "test123"
+        hashed = get_password_hash(test_password)
+        verified = verify_password(test_password, hashed)
+        logger.info(f"Password test: {verified}")
     else:
-        print("Please check your PostgreSQL connection settings.")
+        logger.error("Please check your PostgreSQL connection settings.")
