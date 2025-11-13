@@ -284,6 +284,16 @@ function CodeSenseAI() {
         };
     }, [menuTimeout]);
 
+    // Update editor language when language changes
+    useEffect(() => {
+        if (editor && !selectedSubmission) {
+            const model = editor.getModel();
+            if (model) {
+                monaco.editor.setModelLanguage(model, getMonacoLanguage(language));
+            }
+        }
+    }, [language, editor, selectedSubmission]);
+
     const checkAuthStatus = async (token) => {
         try {
             const response = await fetch('/auth/me', {
