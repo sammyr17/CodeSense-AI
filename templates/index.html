@@ -17,6 +17,25 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+        
+        /* Custom styles for login panel */
+        .login-panel {
+            background-color: rgba(245, 245, 220, 0.9); /* Light beige/cream */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Mobile responsive adjustments */
+        @media (max-width: 1024px) {
+            .min-h-screen.flex {
+                justify-content: center !important;
+            }
+            .login-panel {
+                margin-right: 0 !important;
+                max-width: 90% !important;
+            }
+        }
     </style>
 </head>
 <body>

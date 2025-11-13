@@ -647,10 +647,19 @@ function CodeSenseAI() {
 
     if (!isLoggedIn) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+            <div 
+                className="min-h-screen flex items-center justify-end p-8 relative"
+                style={{
+                    backgroundImage: 'url(/static/images/workspace-hero.jpg)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }}
+            >
+                {/* Floating Login Panel */}
+                <div className="login-panel rounded-3xl shadow-2xl p-8 w-full max-w-md mr-16">
                     <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-full mb-4">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-800 rounded-full mb-4">
                             <Code />
                         </div>
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">CodeSense AI</h1>
