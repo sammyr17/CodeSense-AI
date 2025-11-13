@@ -641,11 +641,7 @@ function CodeSenseAI() {
             }
         }
 
-        reportContent += '--- Code Output ---\n';
-        reportContent += analysisResult.output || 'No output detected';
-        reportContent += '\n\n';
-
-        // Add Quality Metrics section
+        // Add Quality Metrics section (now first)
         if (analysisResult.quality_metrics) {
             reportContent += '--- Code Quality Metrics ---\n';
             reportContent += `Summary: ${analysisResult.quality_metrics.summary}\n`;
@@ -680,6 +676,10 @@ function CodeSenseAI() {
             }
             reportContent += '\n';
         }
+
+        reportContent += '--- Code Output ---\n';
+        reportContent += analysisResult.output || 'No output detected';
+        reportContent += '\n\n';
 
         reportContent += '--- Issues Found ---\n';
         if (analysisResult.errors && analysisResult.errors.length > 0) {
@@ -1094,143 +1094,6 @@ function CodeSenseAI() {
                                     <span>Download Report</span>
                                 </button>
 
-                                {/* Code Output - Collapsible */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                                    <button
-                                        onClick={() => toggleSection('output')}
-                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <FileText />
-                                            <span className="text-lg font-semibold text-gray-900">Code Output</span>
-                                        </div>
-                                        {collapsedSections.output ? <ChevronDown /> : <ChevronUp />}
-                                    </button>
-                                    {!collapsedSections.output && (
-                                        <div className="px-6 pb-6">
-                                            <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm text-gray-800 whitespace-pre-wrap">
-                                                {analysisResult.output || "No output predicted"}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Issues Found - Collapsible */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                                    <button
-                                        onClick={() => toggleSection('issues')}
-                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <AlertCircle />
-                                            <span className="text-lg font-semibold text-gray-900">Issues Found</span>
-                                            {analysisResult.errors && analysisResult.errors.length > 0 && (
-                                                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
-                                                    {analysisResult.errors.length}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {collapsedSections.issues ? <ChevronDown /> : <ChevronUp />}
-                                    </button>
-                                    {!collapsedSections.issues && (
-                                        <div className="px-6 pb-6">
-                                            {analysisResult.errors && analysisResult.errors.length > 0 ? (
-                                                <div className="space-y-2">
-                                                    {analysisResult.errors.map((error, idx) => (
-                                                        <div
-                                                            key={idx}
-                                                            className={`p-3 rounded-lg border ${
-                                                                error.severity === 'error'
-                                                                    ? 'bg-red-50 border-red-200'
-                                                                    : error.severity === 'warning'
-                                                                    ? 'bg-yellow-50 border-yellow-200'
-                                                                    : 'bg-blue-50 border-blue-200'
-                                                            }`}
-                                                        >
-                                                            <div className="flex items-start space-x-2">
-                                                                <span className="font-semibold text-sm">Line {error.line}:</span>
-                                                                <span className="text-sm">{error.message}</span>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ) : (
-                                                <p className="text-green-600 text-sm">No issues found! Your code looks good.</p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Suggestions - Collapsible */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                                    <button
-                                        onClick={() => toggleSection('suggestions')}
-                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <Info />
-                                            <span className="text-lg font-semibold text-gray-900">Suggestions</span>
-                                            {analysisResult.suggestions && analysisResult.suggestions.length > 0 && (
-                                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                                    {analysisResult.suggestions.length}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {collapsedSections.suggestions ? <ChevronDown /> : <ChevronUp />}
-                                    </button>
-                                    {!collapsedSections.suggestions && (
-                                        <div className="px-6 pb-6">
-                                            {analysisResult.suggestions && analysisResult.suggestions.length > 0 ? (
-                                                <ul className="space-y-2">
-                                                    {analysisResult.suggestions.map((suggestion, idx) => (
-                                                        <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
-                                                            <span className="text-blue-600 font-bold">•</span>
-                                                            <span>{suggestion}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            ) : (
-                                                <p className="text-gray-600 text-sm">No suggestions available</p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Optimizations - Collapsible */}
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                                    <button
-                                        onClick={() => toggleSection('optimizations')}
-                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <CheckCircle />
-                                            <span className="text-lg font-semibold text-gray-900">Optimizations</span>
-                                            {analysisResult.optimizations && analysisResult.optimizations.length > 0 && (
-                                                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                                    {analysisResult.optimizations.length}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {collapsedSections.optimizations ? <ChevronDown /> : <ChevronUp />}
-                                    </button>
-                                    {!collapsedSections.optimizations && (
-                                        <div className="px-6 pb-6">
-                                            {analysisResult.optimizations && analysisResult.optimizations.length > 0 ? (
-                                                <ul className="space-y-2">
-                                                    {analysisResult.optimizations.map((optimization, idx) => (
-                                                        <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
-                                                            <span className="text-green-600 font-bold">•</span>
-                                                            <span>{optimization}</span>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            ) : (
-                                                <p className="text-gray-600 text-sm">No optimizations suggested</p>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
                                 {/* Quality Metrics - Collapsible */}
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                                     <button
@@ -1357,6 +1220,143 @@ function CodeSenseAI() {
                                                     </ul>
                                                 </div>
                                             )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Issues Found - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('issues')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <AlertCircle />
+                                            <span className="text-lg font-semibold text-gray-900">Issues Found</span>
+                                            {analysisResult.errors && analysisResult.errors.length > 0 && (
+                                                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                                                    {analysisResult.errors.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.issues ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.issues && (
+                                        <div className="px-6 pb-6">
+                                            {analysisResult.errors && analysisResult.errors.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {analysisResult.errors.map((error, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className={`p-3 rounded-lg border ${
+                                                                error.severity === 'error'
+                                                                    ? 'bg-red-50 border-red-200'
+                                                                    : error.severity === 'warning'
+                                                                    ? 'bg-yellow-50 border-yellow-200'
+                                                                    : 'bg-blue-50 border-blue-200'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-start space-x-2">
+                                                                <span className="font-semibold text-sm">Line {error.line}:</span>
+                                                                <span className="text-sm">{error.message}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-green-600 text-sm">No issues found! Your code looks good.</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Suggestions - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('suggestions')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <Info />
+                                            <span className="text-lg font-semibold text-gray-900">Suggestions</span>
+                                            {analysisResult.suggestions && analysisResult.suggestions.length > 0 && (
+                                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                                    {analysisResult.suggestions.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.suggestions ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.suggestions && (
+                                        <div className="px-6 pb-6">
+                                            {analysisResult.suggestions && analysisResult.suggestions.length > 0 ? (
+                                                <ul className="space-y-2">
+                                                    {analysisResult.suggestions.map((suggestion, idx) => (
+                                                        <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
+                                                            <span className="text-blue-600 font-bold">•</span>
+                                                            <span>{suggestion}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-gray-600 text-sm">No suggestions available</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Optimizations - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('optimizations')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <CheckCircle />
+                                            <span className="text-lg font-semibold text-gray-900">Optimizations</span>
+                                            {analysisResult.optimizations && analysisResult.optimizations.length > 0 && (
+                                                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                                    {analysisResult.optimizations.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.optimizations ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.optimizations && (
+                                        <div className="px-6 pb-6">
+                                            {analysisResult.optimizations && analysisResult.optimizations.length > 0 ? (
+                                                <ul className="space-y-2">
+                                                    {analysisResult.optimizations.map((optimization, idx) => (
+                                                        <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
+                                                            <span className="text-green-600 font-bold">•</span>
+                                                            <span>{optimization}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-gray-600 text-sm">No optimizations suggested</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Code Output - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('output')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <FileText />
+                                            <span className="text-lg font-semibold text-gray-900">Code Output</span>
+                                        </div>
+                                        {collapsedSections.output ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.output && (
+                                        <div className="px-6 pb-6">
+                                            <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm text-gray-800 whitespace-pre-wrap">
+                                                {analysisResult.output || "No output predicted"}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
