@@ -10,10 +10,36 @@ const Upload = () => (
 );
 
 const Download = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="7 10 12 15 17 10"></polyline>
-        <line x1="12" y1="15" x2="12" y2="3"></line>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7,10 12,15 17,10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+);
+
+const ChevronDown = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="6,9 12,15 18,9"/>
+    </svg>
+);
+
+const ChevronUp = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18,15 12,9 6,15"/>
+    </svg>
+);
+
+const Shield = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+);
+
+const BarChart = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="20" x2="12" y2="10"/>
+        <line x1="18" y1="20" x2="18" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="16"/>
     </svg>
 );
 
@@ -102,6 +128,13 @@ function CodeSenseAI() {
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [submissionsLoading, setSubmissionsLoading] = useState(false);
     const [menuTimeout, setMenuTimeout] = useState(null);
+    const [collapsedSections, setCollapsedSections] = useState({
+        output: false,
+        issues: false,
+        suggestions: false,
+        optimizations: false,
+        quality: false
+    });
 
     const [code, setCode] = useState('');
     const [language, setLanguage] = useState('javascript');
@@ -497,6 +530,13 @@ function CodeSenseAI() {
         setMenuTimeout(timeout);
     };
 
+    const toggleSection = (section) => {
+        setCollapsedSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
+
     const handleFileUpload = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -604,6 +644,42 @@ function CodeSenseAI() {
         reportContent += '--- Code Output ---\n';
         reportContent += analysisResult.output || 'No output detected';
         reportContent += '\n\n';
+
+        // Add Quality Metrics section
+        if (analysisResult.quality_metrics) {
+            reportContent += '--- Code Quality Metrics ---\n';
+            reportContent += `Summary: ${analysisResult.quality_metrics.summary}\n`;
+            reportContent += `Overall Score: ${analysisResult.quality_metrics.overall_score}/100\n`;
+            reportContent += `Cyclomatic Complexity: ${analysisResult.quality_metrics.cyclomatic_complexity}\n`;
+            reportContent += `Lines of Code: ${analysisResult.quality_metrics.lines_of_code}\n`;
+            reportContent += `Time Complexity: ${analysisResult.quality_metrics.time_complexity}\n`;
+            reportContent += `Space Complexity: ${analysisResult.quality_metrics.space_complexity}\n`;
+            if (analysisResult.quality_metrics.security_analysis) {
+                reportContent += `Security Analysis: ${analysisResult.quality_metrics.security_analysis}\n`;
+            }
+            
+            if (analysisResult.quality_metrics.complexity_issues && analysisResult.quality_metrics.complexity_issues.length > 0) {
+                reportContent += '\nComplexity Issues:\n';
+                analysisResult.quality_metrics.complexity_issues.forEach((issue, idx) => {
+                    reportContent += `${idx + 1}. ${issue}\n`;
+                });
+            }
+            
+            if (analysisResult.quality_metrics.security_issues && analysisResult.quality_metrics.security_issues.length > 0) {
+                reportContent += '\nSecurity Issues:\n';
+                analysisResult.quality_metrics.security_issues.forEach((issue, idx) => {
+                    reportContent += `${idx + 1}. ${issue}\n`;
+                });
+            }
+            
+            if (analysisResult.quality_metrics.recommendations && analysisResult.quality_metrics.recommendations.length > 0) {
+                reportContent += '\nQuality Recommendations:\n';
+                analysisResult.quality_metrics.recommendations.forEach((rec, idx) => {
+                    reportContent += `${idx + 1}. ${rec}\n`;
+                });
+            }
+            reportContent += '\n';
+        }
 
         reportContent += '--- Issues Found ---\n';
         if (analysisResult.errors && analysisResult.errors.length > 0) {
@@ -1018,81 +1094,270 @@ function CodeSenseAI() {
                                     <span>Download Report</span>
                                 </button>
 
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                                        <FileText />
-                                        <span>Code Output</span>
-                                    </h3>
-                                    <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm text-gray-800 whitespace-pre-wrap">
-                                        {analysisResult.output || "No output predicted"}
-                                    </div>
-                                </div>
-
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                                        <AlertCircle />
-                                        <span>Issues Found</span>
-                                    </h3>
-                                    {analysisResult.errors && analysisResult.errors.length > 0 ? (
-                                        <div className="space-y-2">
-                                            {analysisResult.errors.map((error, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className={`p-3 rounded-lg border ${
-                                                        error.severity === 'error'
-                                                            ? 'bg-red-50 border-red-200'
-                                                            : error.severity === 'warning'
-                                                            ? 'bg-yellow-50 border-yellow-200'
-                                                            : 'bg-blue-50 border-blue-200'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-start space-x-2">
-                                                        <span className="font-semibold text-sm">Line {error.line}:</span>
-                                                        <span className="text-sm">{error.message}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                {/* Code Output - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('output')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <FileText />
+                                            <span className="text-lg font-semibold text-gray-900">Code Output</span>
                                         </div>
-                                    ) : (
-                                        <p className="text-green-600 text-sm">No issues found! Your code looks good.</p>
+                                        {collapsedSections.output ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.output && (
+                                        <div className="px-6 pb-6">
+                                            <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm text-gray-800 whitespace-pre-wrap">
+                                                {analysisResult.output || "No output predicted"}
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
 
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                                        <Info />
-                                        <span>Suggestions</span>
-                                    </h3>
-                                    {analysisResult.suggestions && analysisResult.suggestions.length > 0 ? (
-                                        <ul className="space-y-2">
-                                            {analysisResult.suggestions.map((suggestion, idx) => (
-                                                <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
-                                                    <span className="text-blue-600 font-bold">•</span>
-                                                    <span>{suggestion}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-gray-600 text-sm">No suggestions available</p>
+                                {/* Issues Found - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('issues')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <AlertCircle />
+                                            <span className="text-lg font-semibold text-gray-900">Issues Found</span>
+                                            {analysisResult.errors && analysisResult.errors.length > 0 && (
+                                                <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                                                    {analysisResult.errors.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.issues ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.issues && (
+                                        <div className="px-6 pb-6">
+                                            {analysisResult.errors && analysisResult.errors.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {analysisResult.errors.map((error, idx) => (
+                                                        <div
+                                                            key={idx}
+                                                            className={`p-3 rounded-lg border ${
+                                                                error.severity === 'error'
+                                                                    ? 'bg-red-50 border-red-200'
+                                                                    : error.severity === 'warning'
+                                                                    ? 'bg-yellow-50 border-yellow-200'
+                                                                    : 'bg-blue-50 border-blue-200'
+                                                            }`}
+                                                        >
+                                                            <div className="flex items-start space-x-2">
+                                                                <span className="font-semibold text-sm">Line {error.line}:</span>
+                                                                <span className="text-sm">{error.message}</span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-green-600 text-sm">No issues found! Your code looks good.</p>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
 
-                                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                                        <CheckCircle />
-                                        <span>Optimizations</span>
-                                    </h3>
-                                    {analysisResult.optimizations && analysisResult.optimizations.length > 0 ? (
-                                        <ul className="space-y-2">
-                                            {analysisResult.optimizations.map((optimization, idx) => (
-                                                <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
-                                                    <span className="text-green-600 font-bold">•</span>
-                                                    <span>{optimization}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p className="text-gray-600 text-sm">No optimizations suggested</p>
+                                {/* Suggestions - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('suggestions')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <Info />
+                                            <span className="text-lg font-semibold text-gray-900">Suggestions</span>
+                                            {analysisResult.suggestions && analysisResult.suggestions.length > 0 && (
+                                                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                                    {analysisResult.suggestions.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.suggestions ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.suggestions && (
+                                        <div className="px-6 pb-6">
+                                            {analysisResult.suggestions && analysisResult.suggestions.length > 0 ? (
+                                                <ul className="space-y-2">
+                                                    {analysisResult.suggestions.map((suggestion, idx) => (
+                                                        <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
+                                                            <span className="text-blue-600 font-bold">•</span>
+                                                            <span>{suggestion}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-gray-600 text-sm">No suggestions available</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Optimizations - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('optimizations')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <CheckCircle />
+                                            <span className="text-lg font-semibold text-gray-900">Optimizations</span>
+                                            {analysisResult.optimizations && analysisResult.optimizations.length > 0 && (
+                                                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                                                    {analysisResult.optimizations.length}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.optimizations ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.optimizations && (
+                                        <div className="px-6 pb-6">
+                                            {analysisResult.optimizations && analysisResult.optimizations.length > 0 ? (
+                                                <ul className="space-y-2">
+                                                    {analysisResult.optimizations.map((optimization, idx) => (
+                                                        <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
+                                                            <span className="text-green-600 font-bold">•</span>
+                                                            <span>{optimization}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p className="text-gray-600 text-sm">No optimizations suggested</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Quality Metrics - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('quality')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <BarChart />
+                                            <span className="text-lg font-semibold text-gray-900">Code Quality Metrics</span>
+                                            {analysisResult.quality_metrics && analysisResult.quality_metrics.overall_score && (
+                                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                                    analysisResult.quality_metrics.overall_score >= 80 
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : analysisResult.quality_metrics.overall_score >= 60
+                                                        ? 'bg-yellow-100 text-yellow-800'
+                                                        : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                    {analysisResult.quality_metrics.overall_score}/100
+                                                </span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.quality ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.quality && analysisResult.quality_metrics && (
+                                        <div className="px-6 pb-6 space-y-4">
+                                            {/* Summary */}
+                                            <div className="bg-gray-50 rounded-lg p-4">
+                                                <h4 className="font-semibold text-sm text-gray-900 mb-2">Summary</h4>
+                                                <p className="text-sm text-gray-700">{analysisResult.quality_metrics.summary}</p>
+                                            </div>
+
+                                            {/* Overall Score */}
+                                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 text-center">
+                                                <h4 className="font-semibold text-lg text-gray-900 mb-2">Overall Code Quality Score</h4>
+                                                <div className={`text-4xl font-bold mb-2 ${
+                                                    analysisResult.quality_metrics.overall_score >= 80 
+                                                        ? 'text-green-600'
+                                                        : analysisResult.quality_metrics.overall_score >= 60
+                                                        ? 'text-yellow-600'
+                                                        : 'text-red-600'
+                                                }`}>
+                                                    {analysisResult.quality_metrics.overall_score}/100
+                                                </div>
+                                                <p className="text-sm text-gray-600">
+                                                    {analysisResult.quality_metrics.overall_score >= 80 
+                                                        ? 'Excellent code quality'
+                                                        : analysisResult.quality_metrics.overall_score >= 60
+                                                        ? 'Good code quality'
+                                                        : 'Needs improvement'}
+                                                </p>
+                                            </div>
+
+                                            {/* Metrics Grid */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div className="bg-orange-50 rounded-lg p-4">
+                                                    <h4 className="font-semibold text-sm text-orange-900 mb-1">Cyclomatic Complexity</h4>
+                                                    <p className="text-sm text-orange-700">{analysisResult.quality_metrics.cyclomatic_complexity}</p>
+                                                </div>
+                                                <div className="bg-blue-50 rounded-lg p-4">
+                                                    <h4 className="font-semibold text-sm text-blue-900 mb-1">Lines of Code</h4>
+                                                    <p className="text-sm text-blue-700">{analysisResult.quality_metrics.lines_of_code}</p>
+                                                </div>
+                                                <div className="bg-purple-50 rounded-lg p-4">
+                                                    <h4 className="font-semibold text-sm text-purple-900 mb-1">Time Complexity</h4>
+                                                    <p className="text-sm text-purple-700">{analysisResult.quality_metrics.time_complexity}</p>
+                                                </div>
+                                                <div className="bg-teal-50 rounded-lg p-4">
+                                                    <h4 className="font-semibold text-sm text-teal-900 mb-1">Space Complexity</h4>
+                                                    <p className="text-sm text-teal-700">{analysisResult.quality_metrics.space_complexity}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Security Analysis */}
+                                            {analysisResult.quality_metrics.security_analysis && (
+                                                <div className="bg-red-50 rounded-lg p-4">
+                                                    <div className="flex items-center space-x-2 mb-2">
+                                                        <Shield />
+                                                        <h4 className="font-semibold text-sm text-red-900">Security Analysis</h4>
+                                                    </div>
+                                                    <p className="text-sm text-red-700">{analysisResult.quality_metrics.security_analysis}</p>
+                                                </div>
+                                            )}
+
+                                            {/* Issues Lists */}
+                                            {analysisResult.quality_metrics.complexity_issues && analysisResult.quality_metrics.complexity_issues.length > 0 && (
+                                                <div>
+                                                    <h4 className="font-semibold text-sm text-gray-900 mb-2">Complexity Issues</h4>
+                                                    <ul className="space-y-1">
+                                                        {analysisResult.quality_metrics.complexity_issues.map((issue, idx) => (
+                                                            <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
+                                                                <span className="text-orange-600 font-bold">•</span>
+                                                                <span>{issue}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {analysisResult.quality_metrics.security_issues && analysisResult.quality_metrics.security_issues.length > 0 && (
+                                                <div>
+                                                    <h4 className="font-semibold text-sm text-gray-900 mb-2">Security Issues</h4>
+                                                    <ul className="space-y-1">
+                                                        {analysisResult.quality_metrics.security_issues.map((issue, idx) => (
+                                                            <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
+                                                                <span className="text-red-600 font-bold">•</span>
+                                                                <span>{issue}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+
+                                            {/* Recommendations */}
+                                            {analysisResult.quality_metrics.recommendations && analysisResult.quality_metrics.recommendations.length > 0 && (
+                                                <div>
+                                                    <h4 className="font-semibold text-sm text-gray-900 mb-2">Recommendations</h4>
+                                                    <ul className="space-y-1">
+                                                        {analysisResult.quality_metrics.recommendations.map((rec, idx) => (
+                                                            <li key={idx} className="flex items-start space-x-2 text-sm text-gray-700">
+                                                                <span className="text-green-600 font-bold">•</span>
+                                                                <span>{rec}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </>

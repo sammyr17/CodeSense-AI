@@ -1,33 +1,29 @@
 # CodeSense AI
 
-AI-Powered Code Analysis Platform with User Authentication and Submission History
-
-## Project Overview
-
-CodeSense AI is a comprehensive web application that analyzes code using Google's Gemini AI. It provides instant feedback on code quality, error detection, optimization suggestions, and expected output for multiple programming languages. The platform includes user authentication, submission history, and comprehensive logging.
+An AI-powered code analysis platform that provides intelligent code review, optimization suggestions, complexity analysis, and multi-language support using Google Gemini AI and Lizard complexity analyzer.
 
 ## Features
 
-- **AI-Powered Analysis**: Uses Google Gemini AI for comprehensive code analysis
-- **Multi-Language Support**: Supports JavaScript, Python, Java, C++, Go, and more
-- **User Authentication**: Secure JWT-based login and signup system
-- **Submission History**: Automatically saves and tracks all code analysis submissions
-- **Real-time Analysis**: Get instant feedback on code quality, errors, and optimizations
-- **Download Reports**: Generate downloadable analysis reports
-- **Modern UI**: Clean, responsive interface with React components
-- **Comprehensive Logging**: Structured logging for debugging and monitoring
+### Code Analysis
+- **Multi-language Support**: JavaScript, Python, Java, C++, Go
+- **AI-Powered Analysis**: Uses Google Gemini AI for intelligent code review
+- **Cyclomatic Complexity**: Accurate complexity analysis using Lizard library
+- **Time & Space Complexity**: Algorithm complexity estimation
+- **Overall Quality Score**: Comprehensive code quality scoring (0-100)
+- **Security Analysis**: Identifies potential security vulnerabilities
 
-## Technologies Used
+### User Interface
+- **Real-time Code Editor**: Monaco Editor with syntax highlighting
+- **Collapsible Results**: Organized, expandable analysis sections
+- **Interactive Dashboard**: Clean, modern UI with floating login panel
+- **Report Generation**: Download detailed analysis reports
 
-- **Backend**: FastAPI (Python web framework)
-- **Database**: PostgreSQL with SQLAlchemy ORM
-- **Authentication**: JWT tokens with bcrypt password hashing
-- **Frontend**: HTML5, CSS3, JavaScript with React components
-- **AI**: Google Gemini API
-- **Server**: Uvicorn (ASGI server)
-- **Logging**: Python logging with file rotation
+### User Management
+- **User Authentication**: Secure JWT-based authentication
+- **Analysis History**: Track and review past code submissions
+- **Personal Dashboard**: User-specific analysis tracking
 
-## Prerequisites
+## Quality Metrics
 
 - **Python 3.10 or higher** (recommended for best compatibility)
 - **PostgreSQL 12 or higher** (for database functionality)

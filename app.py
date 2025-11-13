@@ -10,12 +10,14 @@ import json
 import re
 import uuid
 import time
+import tempfile
 from datetime import datetime
 from typing import Optional, List, Dict
 from sqlalchemy.orm import Session
 from database import get_db, create_code_submission, get_user_submissions, get_submission_by_id, CodeSubmission
 from auth import get_current_user, User
 from logger_config import setup_logging
+import lizard
 
 # Set up logging
 logger = setup_logging(__name__)
@@ -28,7 +30,271 @@ except ImportError:
     GEMINI_AVAILABLE = False
 
 router = APIRouter(prefix="/api", tags=["api"])
+auth_router = APIRouter(prefix="/auth")
 
+def analyze_code_complexity(code: str, language: str) -> Dict:
+    """
+    Analyze code complexity using Lizard library
+    """
+    try:
+        # Create a temporary file with appropriate extension
+        file_extension = {
+            'javascript': '.js',
+            'python': '.py',
+            'java': '.java',
+            'cpp': '.cpp',
+            'c': '.c',
+            'go': '.go'
+        }.get(language, '.txt')
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix=file_extension, delete=False) as temp_file:
+            temp_file.write(code)
+            temp_file_path = temp_file.name
+        
+        # Analyze with Lizard
+        analysis = lizard.analyze_file(temp_file_path)
+        
+        # Clean up temp file
+        os.unlink(temp_file_path)
+        
+        # Calculate metrics
+        total_functions = len(analysis.function_list)
+        total_complexity = sum(func.cyclomatic_complexity for func in analysis.function_list)
+        avg_complexity = total_complexity / total_functions if total_functions > 0 else 0
+        max_complexity = max((func.cyclomatic_complexity for func in analysis.function_list), default=0)
+        
+        # Handle script-level complexity (when no functions are defined)
+        script_complexity = 0
+        if total_functions == 0:
+            script_complexity = calculate_script_complexity(code, language)
+            avg_complexity = script_complexity
+            max_complexity = script_complexity
+        
+        # Estimate time and space complexity based on code patterns
+        time_complexity = estimate_time_complexity(code, language)
+        space_complexity = estimate_space_complexity(code, language)
+        
+        # Calculate overall score (0-100)
+        overall_score = calculate_overall_score(
+            avg_complexity, max_complexity, max(total_functions, 1), 
+            analysis.nloc, time_complexity, space_complexity
+        )
+        
+        complexity_description = ""
+        if total_functions > 0:
+            complexity_description = f"Average: {avg_complexity:.1f}, Max: {max_complexity}, Total Functions: {total_functions}"
+        else:
+            complexity_description = f"Script Complexity: {script_complexity:.1f} (No functions defined)"
+        
+        return {
+            "cyclomatic_complexity": complexity_description,
+            "lines_of_code": analysis.nloc,
+            "time_complexity": time_complexity,
+            "space_complexity": space_complexity,
+            "overall_score": overall_score,
+            "complexity_details": {
+                "average_complexity": avg_complexity,
+                "max_complexity": max_complexity,
+                "total_functions": total_functions,
+                "script_complexity": script_complexity,
+                "lines_of_code": analysis.nloc
+            }
+        }
+        
+    except Exception as e:
+        logger.warning(f"Lizard analysis failed: {e}")
+        # Fallback to script-level complexity calculation
+        try:
+            script_complexity = calculate_script_complexity(code, language)
+            time_complexity = estimate_time_complexity(code, language)
+            space_complexity = estimate_space_complexity(code, language)
+            lines_count = len([line for line in code.split('\n') if line.strip()])
+            
+            overall_score = calculate_overall_score(
+                script_complexity, script_complexity, 1, 
+                lines_count, time_complexity, space_complexity
+            )
+            
+            return {
+                "cyclomatic_complexity": f"Script Complexity: {script_complexity:.1f} (Lizard failed, using fallback)",
+                "lines_of_code": lines_count,
+                "time_complexity": time_complexity,
+                "space_complexity": space_complexity,
+                "overall_score": overall_score,
+                "complexity_details": {
+                    "script_complexity": script_complexity,
+                    "lines_of_code": lines_count
+                }
+            }
+        except Exception as fallback_error:
+            logger.error(f"Fallback complexity analysis also failed: {fallback_error}")
+            return {
+                "cyclomatic_complexity": "Analysis failed",
+                "lines_of_code": 0,
+                "time_complexity": "Unable to determine",
+                "space_complexity": "Unable to determine", 
+                "overall_score": 50,
+                "complexity_details": {}
+            }
+
+def calculate_script_complexity(code: str, language: str) -> float:
+    """
+    Calculate cyclomatic complexity for script-level code (no functions)
+    """
+    complexity = 1  # Base complexity
+    code_lower = code.lower()
+    
+    # Count decision points that increase complexity
+    if language == 'python':
+        # Control flow statements
+        complexity += code_lower.count('if ')
+        complexity += code_lower.count('elif ')
+        complexity += code_lower.count('for ')
+        complexity += code_lower.count('while ')
+        complexity += code_lower.count('except ')
+        complexity += code_lower.count('and ')
+        complexity += code_lower.count('or ')
+        complexity += code_lower.count('break')
+        complexity += code_lower.count('continue')
+        
+    elif language == 'javascript':
+        complexity += code_lower.count('if(') + code_lower.count('if (')
+        complexity += code_lower.count('else if') + code_lower.count('elseif')
+        complexity += code_lower.count('for(') + code_lower.count('for (')
+        complexity += code_lower.count('while(') + code_lower.count('while (')
+        complexity += code_lower.count('switch')
+        complexity += code_lower.count('case ')
+        complexity += code_lower.count('catch')
+        complexity += code_lower.count('&&')
+        complexity += code_lower.count('||')
+        complexity += code_lower.count('break')
+        complexity += code_lower.count('continue')
+        
+    elif language in ['java', 'cpp', 'c']:
+        complexity += code_lower.count('if(') + code_lower.count('if (')
+        complexity += code_lower.count('else if')
+        complexity += code_lower.count('for(') + code_lower.count('for (')
+        complexity += code_lower.count('while(') + code_lower.count('while (')
+        complexity += code_lower.count('switch')
+        complexity += code_lower.count('case ')
+        complexity += code_lower.count('catch')
+        complexity += code_lower.count('&&')
+        complexity += code_lower.count('||')
+        complexity += code_lower.count('break')
+        complexity += code_lower.count('continue')
+        
+    elif language == 'go':
+        complexity += code_lower.count('if ')
+        complexity += code_lower.count('for ')
+        complexity += code_lower.count('switch')
+        complexity += code_lower.count('case ')
+        complexity += code_lower.count('select')
+        complexity += code_lower.count('&&')
+        complexity += code_lower.count('||')
+        complexity += code_lower.count('break')
+        complexity += code_lower.count('continue')
+    
+    return float(complexity)
+
+def estimate_time_complexity(code: str, language: str) -> str:
+    """
+    Estimate time complexity based on code patterns
+    """
+    code_lower = code.lower()
+    
+    # Count nested loops
+    nested_loops = 0
+    if language == 'python':
+        nested_loops = code_lower.count('for') + code_lower.count('while')
+    elif language == 'javascript':
+        nested_loops = code_lower.count('for') + code_lower.count('while')
+    elif language in ['java', 'cpp', 'c']:
+        nested_loops = code_lower.count('for(') + code_lower.count('while(')
+    
+    # Check for recursive patterns
+    has_recursion = 'recursion' in code_lower or code_lower.count('return') > 1
+    
+    # Estimate based on patterns
+    if nested_loops >= 3:
+        return "O(n³) or higher - Multiple nested loops detected"
+    elif nested_loops == 2:
+        return "O(n²) - Nested loops detected"
+    elif nested_loops == 1:
+        return "O(n) - Single loop detected"
+    elif has_recursion:
+        return "O(log n) to O(n) - Recursive pattern detected"
+    else:
+        return "O(1) - Constant time operations"
+
+def estimate_space_complexity(code: str, language: str) -> str:
+    """
+    Estimate space complexity based on code patterns
+    """
+    code_lower = code.lower()
+    
+    # Check for data structures
+    arrays = code_lower.count('array') + code_lower.count('list') + code_lower.count('[]')
+    objects = code_lower.count('object') + code_lower.count('dict') + code_lower.count('{}')
+    
+    # Check for recursive calls (stack space)
+    has_recursion = 'recursion' in code_lower or code_lower.count('return') > 1
+    
+    if arrays > 2 or objects > 2:
+        return "O(n) - Multiple data structures"
+    elif arrays > 0 or objects > 0:
+        return "O(n) - Data structures used"
+    elif has_recursion:
+        return "O(log n) to O(n) - Recursive stack space"
+    else:
+        return "O(1) - Constant space"
+
+def calculate_overall_score(avg_complexity: float, max_complexity: int, 
+                          total_functions: int, lines_of_code: int,
+                          time_complexity: str, space_complexity: str) -> int:
+    """
+    Calculate overall code quality score (0-100)
+    """
+    score = 100
+    
+    # Complexity penalty
+    if avg_complexity > 10:
+        score -= 30
+    elif avg_complexity > 5:
+        score -= 15
+    elif avg_complexity > 3:
+        score -= 5
+    
+    # Max complexity penalty
+    if max_complexity > 15:
+        score -= 25
+    elif max_complexity > 10:
+        score -= 15
+    elif max_complexity > 5:
+        score -= 5
+    
+    # Lines of code penalty (too long functions)
+    if lines_of_code > 200:
+        score -= 15
+    elif lines_of_code > 100:
+        score -= 10
+    elif lines_of_code > 50:
+        score -= 5
+    
+    # Time complexity penalty
+    if "O(n³)" in time_complexity or "higher" in time_complexity:
+        score -= 20
+    elif "O(n²)" in time_complexity:
+        score -= 10
+    elif "O(n)" in time_complexity and "nested" not in time_complexity.lower():
+        score -= 5
+    
+    # Bonus for good practices
+    if total_functions > 0 and avg_complexity <= 3:
+        score += 5
+    if lines_of_code > 0 and lines_of_code <= 50:
+        score += 5
+    
+    return max(0, min(100, score))
 
 class CodeAnalysisRequest(BaseModel):
     code: str
@@ -121,7 +387,14 @@ Return exactly this JSON format:
   "errors": [{{"line": number, "message": "error description", "severity": "error|warning|info"}}],
   "suggestions": ["suggestion text"],
   "optimizations": ["optimization text"],
-  "output": "predicted program output"
+  "output": "predicted program output",
+  "quality_metrics": {{
+    "summary": "brief summary of code quality",
+    "complexity_issues": ["issue_1", "issue_2"],
+    "security_issues": ["issue_1", "issue_2"],
+    "recommendations": ["recommendation_1", "recommendation_2"],
+    "security_analysis": "security assessment summary"
+  }}
 }}
 
 Instructions:
@@ -130,6 +403,10 @@ Instructions:
 3. If the code doesn't produce console output, set output to "No console output"
 4. For loops, show the expected iteration results
 5. Be precise with output prediction - show exactly what would appear in the terminal
+6. For quality_metrics: Analyze code complexity, maintainability, security issues, and provide actionable recommendations
+7. Estimate cyclomatic complexity based on control flow structures (if/else, loops, functions)
+8. Assess maintainability based on code structure, naming, and organization
+9. Identify potential security vulnerabilities (SQL injection, XSS, unsafe operations, etc.)
 
 Example: For a loop that prints numbers, show each line that would be printed."""
 
@@ -255,6 +532,9 @@ Example: For a loop that prints numbers, show each line that would be printed.""
                         "output": output_prediction
                     }
         
+        # Analyze code complexity with Lizard
+        complexity_analysis = analyze_code_complexity(request.code, request.language)
+        
         # Ensure the response has the expected structure
         errors_list = []
         if isinstance(analysis_result.get("errors"), list):
@@ -265,6 +545,23 @@ Example: For a loop that prints numbers, show each line that would be printed.""
                         "message": error.get("message", "Unknown error"),
                         "severity": error.get("severity", "error")
                     })
+        
+        # Merge Gemini analysis with Lizard complexity analysis
+        quality_metrics = analysis_result.get("quality_metrics", {})
+        quality_metrics.update({
+            "cyclomatic_complexity": complexity_analysis["cyclomatic_complexity"],
+            "time_complexity": complexity_analysis["time_complexity"],
+            "space_complexity": complexity_analysis["space_complexity"],
+            "overall_score": complexity_analysis["overall_score"],
+            "lines_of_code": complexity_analysis["lines_of_code"]
+        })
+        
+        # Ensure default values for missing fields
+        quality_metrics.setdefault("summary", "Quality analysis completed")
+        quality_metrics.setdefault("complexity_issues", [])
+        quality_metrics.setdefault("security_issues", [])
+        quality_metrics.setdefault("recommendations", [])
+        quality_metrics.setdefault("security_analysis", "No security issues detected")
         
         result = {
             "errors": errors_list,
@@ -278,7 +575,8 @@ Example: For a loop that prints numbers, show each line that would be printed.""
                 if isinstance(analysis_result.get("optimizations"), list)
                 else ["No optimizations suggested"]
             ),
-            "output": analysis_result.get("output", "No console output predicted")
+            "output": analysis_result.get("output", "No console output predicted"),
+            "quality_metrics": quality_metrics
         }
         
         logger.debug(f"Final analysis result: {result}")
