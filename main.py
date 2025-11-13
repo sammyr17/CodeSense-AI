@@ -13,6 +13,10 @@ from dotenv import load_dotenv
 from app import router
 from auth import auth_router
 from database import create_database_and_tables, test_database_connection
+from logger_config import setup_logging
+
+# Set up logging
+logger = setup_logging(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -57,20 +61,20 @@ async def read_root():
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    print(f"🚀 Starting CodeSense AI on http://localhost:{port}")
-    print(f"📝 Make sure GEMINI_API_KEY is set in .env file")
+    logger.info(f"Starting CodeSense AI on http://localhost:{port}")
+    logger.info("Make sure GEMINI_API_KEY is set in .env file")
     
     # Initialize database
-    print("🔧 Initializing database...")
+    logger.info("Initializing database...")
     try:
         if test_database_connection():
             create_database_and_tables()
-            print("Database initialized successfully")
+            logger.info("Database initialized successfully")
         else:
-            print("Database connection failed - authentication features may not work")
+            logger.warning("Database connection failed - authentication features may not work")
     except Exception as e:
-        print(f"Database initialization error: {e}")
-        print("Authentication features may not work - please check PostgreSQL connection")
+        logger.error(f"Database initialization error: {e}")
+        logger.warning("Authentication features may not work - please check PostgreSQL connection")
     
     uvicorn.run(
         "main:app",

@@ -10,6 +10,10 @@ from typing import Optional
 from datetime import datetime, timedelta
 import jwt
 import os
+from logger_config import setup_logging
+
+# Set up logging
+logger = setup_logging(__name__)
 
 from database import get_db, authenticate_user, create_user, get_user_by_username, get_user_by_email, User
 
