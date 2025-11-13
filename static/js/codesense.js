@@ -129,6 +129,7 @@ function CodeSenseAI() {
     const [submissionsLoading, setSubmissionsLoading] = useState(false);
     const [menuTimeout, setMenuTimeout] = useState(null);
     const [collapsedSections, setCollapsedSections] = useState({
+        code_output: false,
         output: false,
         issues: false,
         suggestions: false,
@@ -1340,7 +1341,37 @@ function CodeSenseAI() {
                                     )}
                                 </div>
 
-                                {/* Code Output - Collapsible */}
+                                {/* Actual Code Execution Output - Collapsible */}
+                                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                                    <button
+                                        onClick={() => toggleSection('code_output')}
+                                        className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <Code />
+                                            <span className="text-lg font-semibold text-gray-900">Code Execution Output</span>
+                                            {analysisResult.execution_success ? (
+                                                <span className="ml-2 px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Success</span>
+                                            ) : (
+                                                <span className="ml-2 px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Failed</span>
+                                            )}
+                                        </div>
+                                        {collapsedSections.code_output ? <ChevronDown /> : <ChevronUp />}
+                                    </button>
+                                    {!collapsedSections.code_output && (
+                                        <div className="px-6 pb-6">
+                                            <div className={`rounded-lg p-4 font-mono text-sm whitespace-pre-wrap ${
+                                                analysisResult.execution_success 
+                                                    ? 'bg-green-50 text-green-800 border border-green-200' 
+                                                    : 'bg-red-50 text-red-800 border border-red-200'
+                                            }`}>
+                                                {analysisResult.code_output || "No execution output"}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* AI Analysis Output - Collapsible */}
                                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                                     <button
                                         onClick={() => toggleSection('output')}
@@ -1348,14 +1379,14 @@ function CodeSenseAI() {
                                     >
                                         <div className="flex items-center space-x-2">
                                             <FileText />
-                                            <span className="text-lg font-semibold text-gray-900">Code Output</span>
+                                            <span className="text-lg font-semibold text-gray-900">AI Analysis</span>
                                         </div>
                                         {collapsedSections.output ? <ChevronDown /> : <ChevronUp />}
                                     </button>
                                     {!collapsedSections.output && (
                                         <div className="px-6 pb-6">
                                             <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm text-gray-800 whitespace-pre-wrap">
-                                                {analysisResult.output || "No output predicted"}
+                                                {analysisResult.output || "No analysis output"}
                                             </div>
                                         </div>
                                     )}

@@ -18,6 +18,7 @@ from database import get_db, create_code_submission, get_user_submissions, get_s
 from auth import get_current_user, User
 from logger_config import setup_logging
 import lizard
+from docker_executor import docker_executor
 
 # Set up logging
 logger = setup_logging(__name__)
@@ -312,6 +313,8 @@ class CodeAnalysisResponse(BaseModel):
     suggestions: List[str]
     optimizations: List[str]
     output: str
+    code_output: str
+    execution_success: bool
 
 
 # --- Debug endpoints ---
@@ -366,6 +369,41 @@ async def analyze_code(
             detail="GEMINI_API_KEY is not configured"
         )
 
+    # First, execute the code in Docker to get actual output
+    logger.info("Executing code in Docker container...")
+    execution_result = docker_executor.execute_code(request.code, request.language)
+    
+    # Prepare execution info for response
+    code_output = ""
+    execution_success = execution_result['exit_code'] == 0
+    
+    if execution_success:
+        code_output = execution_result['stdout'] or "No output produced"
+        logger.info(f"Code executed successfully. Output: {code_output[:100]}...")
+    else:
+        code_output = execution_result['stderr'] or "Execution failed with no error message"
+        logger.warning(f"Code execution failed. Error: {code_output[:100]}...")
+    
+    # Only proceed with Gemini analysis if Docker execution was successful
+    if not execution_success:
+        logger.info("Skipping Gemini analysis due to execution errors")
+        # Return early with execution results only
+        return JSONResponse(status_code=200, content={
+            "errors": [{"line": 1, "message": "Code execution failed", "severity": "error"}],
+            "suggestions": ["Fix the execution errors before proceeding with analysis"],
+            "optimizations": ["Ensure your code runs without errors"],
+            "output": "Code analysis skipped due to execution errors",
+            "code_output": code_output,
+            "execution_success": False,
+            "quality_metrics": {
+                "summary": "Analysis skipped due to execution errors",
+                "complexity_issues": [],
+                "security_issues": [],
+                "recommendations": ["Fix execution errors first"],
+                "security_analysis": "Cannot analyze due to execution errors"
+            }
+        })
+    
     # Check if Gemini is available
     if not GEMINI_AVAILABLE:
         raise HTTPException(
@@ -382,12 +420,17 @@ async def analyze_code(
 {request.code}
 ```
 
+Actual execution output:
+```
+{code_output}
+```
+
 Return exactly this JSON format:
 {{
   "errors": [{{"line": number, "message": "error description", "severity": "error|warning|info"}}],
   "suggestions": ["suggestion text"],
   "optimizations": ["optimization text"],
-  "output": "predicted program output",
+  "output": "analysis of the code behavior",
   "quality_metrics": {{
     "summary": "brief summary of code quality",
     "complexity_issues": ["issue_1", "issue_2"],
@@ -399,16 +442,16 @@ Return exactly this JSON format:
 
 Instructions:
 1. Check for syntax errors, logic issues, and best practices
-2. For the "output" field: If the code contains print statements, loops, or calculations, predict what would be printed to console when executed
-3. If the code doesn't produce console output, set output to "No console output"
-4. For loops, show the expected iteration results
-5. Be precise with output prediction - show exactly what would appear in the terminal
-6. For quality_metrics: Analyze code complexity, maintainability, security issues, and provide actionable recommendations
-7. Estimate cyclomatic complexity based on control flow structures (if/else, loops, functions)
-8. Assess maintainability based on code structure, naming, and organization
-9. Identify potential security vulnerabilities (SQL injection, XSS, unsafe operations, etc.)
+2. The code has been successfully executed and the actual output is provided above
+3. For the "output" field: Provide analysis of what the code does based on the actual execution results
+4. Compare expected vs actual behavior if relevant
+5. For quality_metrics: Analyze code complexity, maintainability, security issues, and provide actionable recommendations
+6. Estimate cyclomatic complexity based on control flow structures (if/else, loops, functions)
+7. Assess maintainability based on code structure, naming, and organization
+8. Identify potential security vulnerabilities (SQL injection, XSS, unsafe operations, etc.)
+9. Since the code executed successfully, focus on code quality, style, and optimization suggestions
 
-Example: For a loop that prints numbers, show each line that would be printed."""
+Note: The actual execution output is available, so focus on code quality analysis rather than output prediction."""
 
     try:
         # Use a specific model instead of listing all models
@@ -576,6 +619,8 @@ Example: For a loop that prints numbers, show each line that would be printed.""
                 else ["No optimizations suggested"]
             ),
             "output": analysis_result.get("output", "No console output predicted"),
+            "code_output": code_output,
+            "execution_success": execution_success,
             "quality_metrics": quality_metrics
         }
         
