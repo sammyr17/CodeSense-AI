@@ -86,6 +86,13 @@ async def analyze_code(request: CodeAnalysisRequest):
             detail="GEMINI_API_KEY is not configured"
         )
 
+    # Check if Gemini is available
+    if not GEMINI_AVAILABLE:
+        raise HTTPException(
+            status_code=500,
+            detail="Google Generative AI library is not installed. Please install it with: pip install google-generativeai"
+        )
+    
     # Configure Gemini API
     genai.configure(api_key=gemini_api_key)
     
