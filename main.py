@@ -41,9 +41,8 @@ app.add_middleware(
 app.include_router(router)
 app.include_router(auth_router)
 
-# Serve static files (if you have any CSS/JS files)
-# Uncomment if you create a static folder
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+# Serve static files (CSS/JS files)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Serve frontend
 @app.get("/", response_class=HTMLResponse)
