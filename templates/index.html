@@ -112,10 +112,15 @@
 
         function CodeSenseAI() {
             const [isLoggedIn, setIsLoggedIn] = useState(false);
+            const [isSignupMode, setIsSignupMode] = useState(false);
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
-            const [loginError, setLoginError] = useState('');
-            
+            const [email, setEmail] = useState('');
+            const [fullName, setFullName] = useState('');
+            const [authError, setAuthError] = useState('');
+            const [authLoading, setAuthLoading] = useState(false);
+            const [currentUser, setCurrentUser] = useState(null);
+
             const [code, setCode] = useState('');
             const [language, setLanguage] = useState('javascript');
             const [uploadedFile, setUploadedFile] = useState(null);
@@ -123,33 +128,96 @@
             const [analysisResult, setAnalysisResult] = useState(null);
 
             useEffect(() => {
-                const savedUser = localStorage.getItem('codesense_user');
-                if (savedUser) {
-                    setIsLoggedIn(true);
-                    setUsername(savedUser);
+                const token = localStorage.getItem('codesense_token');
+                if (token) {
+                    // Verify token with backend
+                    checkAuthStatus(token);
                 }
             }, []);
 
-            const handleLogin = (e) => {
-                e.preventDefault();
-                setLoginError('');
-                
-                if (username.trim() && password.trim()) {
-                    if (password.length < 6) {
-                        setLoginError('Password must be at least 6 characters');
-                        return;
+            const checkAuthStatus = async (token) => {
+                try {
+                    const response = await fetch('/auth/me', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        const userData = await response.json();
+                        setCurrentUser(userData);
+                        setUsername(userData.username);
+                        setIsLoggedIn(true);
+                    } else {
+                        localStorage.removeItem('codesense_token');
                     }
-                    localStorage.setItem('codesense_user', username);
-                    setIsLoggedIn(true);
-                    setPassword('');
-                } else {
-                    setLoginError('Please enter both username and password');
+                } catch (error) {
+                    localStorage.removeItem('codesense_token');
                 }
             };
 
-            const handleLogout = () => {
-                localStorage.removeItem('codesense_user');
+            const handleAuth = async (e) => {
+                e.preventDefault();
+                setAuthError('');
+                setAuthLoading(true);
+                
+                // Validate password length for bcrypt compatibility
+                if (password.length > 72) {
+                    setAuthError('Password is too long. Please use 72 characters or fewer.');
+                    setAuthLoading(false);
+                    return;
+                }
+                
+                const endpoint = isSignupMode ? '/auth/signup' : '/auth/login';
+                const payload = isSignupMode 
+                    ? { username, password, email: email || null, full_name: fullName || null }
+                    : { username, password };
+                
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        localStorage.setItem('codesense_token', data.access_token);
+                        setCurrentUser(data.user);
+                        setUsername(data.user.username);
+                        setIsLoggedIn(true);
+                        // Clear form
+                        setPassword('');
+                        setEmail('');
+                        setFullName('');
+                    } else {
+                        setAuthError(data.detail || 'Authentication failed');
+                    }
+                } catch (error) {
+                    setAuthError('Connection error. Please try again.');
+                } finally {
+                    setAuthLoading(false);
+                }
+            };
+
+            const handleLogout = async () => {
+                try {
+                    const token = localStorage.getItem('codesense_token');
+                    if (token) {
+                        await fetch('/auth/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.log('Logout request failed, but continuing...');
+                }
+                
+                localStorage.removeItem('codesense_token');
                 setIsLoggedIn(false);
+                setCurrentUser(null);
                 setUsername('');
                 setCode('');
                 setUploadedFile(null);
@@ -289,22 +357,72 @@
                                     <Code />
                                 </div>
                                 <h1 className="text-3xl font-bold text-gray-900 mb-2">CodeSense AI</h1>
-                                <p className="text-gray-600">Sign in to analyze your code</p>
+                                <p className="text-gray-600">{isSignupMode ? 'Create your account' : 'Sign in to analyze your code'}</p>
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+                                <button
+                                    onClick={() => { setIsSignupMode(false); setAuthError(''); }}
+                                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                                        !isSignupMode 
+                                            ? 'bg-white text-indigo-600 shadow-sm' 
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                >
+                                    Login
+                                </button>
+                                <button
+                                    onClick={() => { setIsSignupMode(true); setAuthError(''); }}
+                                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                                        isSignupMode 
+                                            ? 'bg-white text-indigo-600 shadow-sm' 
+                                            : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                                >
+                                    Sign Up
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleAuth} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
                                     <input
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleLogin(e)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                                         placeholder="Enter your username"
                                         required
+                                        disabled={authLoading}
                                     />
                                 </div>
+
+                                {isSignupMode && (
+                                    <>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Email (Optional)</label>
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                placeholder="Enter your email"
+                                                disabled={authLoading}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Full Name (Optional)</label>
+                                            <input
+                                                type="text"
+                                                value={fullName}
+                                                onChange={(e) => setFullName(e.target.value)}
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                                placeholder="Enter your full name"
+                                                disabled={authLoading}
+                                            />
+                                        </div>
+                                    </>
+                                )}
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
@@ -312,33 +430,46 @@
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleLogin(e)}
                                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                                        placeholder="Enter your password"
+                                        placeholder={isSignupMode ? 'Create a password (6-72 chars)' : 'Enter your password'}
                                         required
+                                        disabled={authLoading}
+                                        maxLength={72}
                                     />
                                 </div>
 
-                                {loginError && (
+                                {authError && (
                                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                                        {loginError}
+                                        {authError}
                                     </div>
                                 )}
 
                                 <button
-                                    onClick={handleLogin}
-                                    className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
+                                    type="submit"
+                                    disabled={authLoading || !username.trim() || !password.trim()}
+                                    className="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
                                 >
-                                    Sign In
+                                    {authLoading ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            <span>{isSignupMode ? 'Creating Account...' : 'Signing In...'}</span>
+                                        </>
+                                    ) : (
+                                        <span>{isSignupMode ? 'Create Account' : 'Sign In'}</span>
+                                    )}
                                 </button>
+                            </form>
 
-                                <p className="text-center text-sm text-gray-600 mt-4">
-                                    Demo: Use any username with password (min 6 chars)
-                                </p>
-                            </div>
+                            <p className="text-center text-sm text-gray-600 mt-4">
+                                {isSignupMode 
+                                    ? 'Already have an account? Click Login above' 
+                                    : 'New user? Click Sign Up above to create an account'
+                                }
+                            </p>
                         </div>
                     </div>
                 );
+
             }
 
             return (
@@ -359,7 +490,9 @@
                                 <div className="flex items-center space-x-4">
                                     <div className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg">
                                         <User />
-                                        <span className="text-sm font-medium text-gray-700">{username}</span>
+                                        <span className="text-sm font-medium text-gray-700">
+                                            {currentUser?.full_name || username}
+                                        </span>
                                     </div>
                                     <button
                                         onClick={handleLogout}

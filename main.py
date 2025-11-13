@@ -11,6 +11,8 @@ import os
 from dotenv import load_dotenv
 
 from app import router
+from auth import auth_router
+from database import create_database_and_tables, test_database_connection
 
 # Load environment variables
 load_dotenv()
@@ -33,6 +35,7 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router)
+app.include_router(auth_router)
 
 # Serve static files (if you have any CSS/JS files)
 # Uncomment if you create a static folder
@@ -56,6 +59,19 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     print(f"🚀 Starting CodeSense AI on http://localhost:{port}")
     print(f"📝 Make sure GEMINI_API_KEY is set in .env file")
+    
+    # Initialize database
+    print("🔧 Initializing database...")
+    try:
+        if test_database_connection():
+            create_database_and_tables()
+            print("Database initialized successfully")
+        else:
+            print("Database connection failed - authentication features may not work")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+        print("Authentication features may not work - please check PostgreSQL connection")
+    
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
