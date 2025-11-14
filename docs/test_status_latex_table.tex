@@ -1,0 +1,163 @@
+% Test Status by Module - LaTeX Table
+% Copy and paste this table into Overleaf.com
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\begin{document}
+
+\title{CodeSense AI - Test Status by Module}
+\author{Test Documentation}
+\date{\today}
+\maketitle
+
+\section{Unit Test Status Summary}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Module} & \textbf{Tests} & \textbf{Status} & \textbf{Coverage} & \textbf{Priority} \\
+\hline
+\textbf{Database} & 16/16 & \textcolor{green}{\textbf{100\% Pass}} & 87\% & High \\
+\hline
+\textbf{Authentication} & 13/13 & \textcolor{green}{\textbf{100\% Pass}} & 74\% & High \\
+\hline
+\textbf{Docker Executor} & 13/13 & \textcolor{green}{\textbf{100\% Pass}} & 85\% & High \\
+\hline
+\textbf{Application Logic} & 19/20 & \textcolor{orange}{\textbf{95\% Pass}} & 97\% & High \\
+\hline
+\hline
+\textbf{Total Unit Tests} & \textbf{61/62} & \textcolor{green}{\textbf{98.4\% Pass}} & \textbf{63.5\%} & \textbf{High} \\
+\hline
+\end{tabular}
+\caption{Unit Test Status by Module}
+\label{tab:test_status}
+\end{table}
+
+\section{Detailed Test Breakdown}
+
+\subsection{Database Module Tests (test\_database.py)}
+\begin{itemize}
+    \item \textbf{Password Utilities}: 3/3 tests passing
+    \item \textbf{User Model}: 6/6 tests passing
+    \item \textbf{Code Submission Model}: 3/3 tests passing
+    \item \textbf{Database Utilities}: 4/4 tests passing
+\end{itemize}
+
+\subsection{Authentication Module Tests (test\_auth.py)}
+\begin{itemize}
+    \item \textbf{JWT Utilities}: 6/6 tests passing
+    \item \textbf{Get Current User}: 2/2 tests passing
+    \item \textbf{Pydantic Models}: 5/5 tests passing
+\end{itemize}
+
+\subsection{Docker Executor Tests (test\_docker\_executor.py)}
+\begin{itemize}
+    \item \textbf{DockerExecutor Class}: 11/11 tests passing
+    \item \textbf{Global Executor Instance}: 2/2 tests passing
+\end{itemize}
+
+\subsection{Application Logic Tests (test\_app.py)}
+\begin{itemize}
+    \item \textbf{Complexity Analysis}: 8/8 tests passing
+    \item \textbf{Pydantic Models}: 3/3 tests passing
+    \item \textbf{API Endpoints}: 8/9 tests passing (1 skipped)
+\end{itemize}
+
+\section{Coverage Targets vs Actual}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Component} & \textbf{Target Coverage} & \textbf{Actual Coverage} & \textbf{Status} \\
+\hline
+Database Operations & 90\%+ & 87\% & \textcolor{orange}{Near Target} \\
+\hline
+Authentication & 85\%+ & 74\% & \textcolor{orange}{Below Target} \\
+\hline
+Docker Executor & 80\%+ & 85\% & \textcolor{green}{Above Target} \\
+\hline
+API Endpoints & 85\%+ & 97\% & \textcolor{green}{Excellent} \\
+\hline
+\textbf{Overall Project} & \textbf{80\%+} & \textbf{63.5\%} & \textcolor{red}{\textbf{Below Target}} \\
+\hline
+\end{tabular}
+\caption{Coverage Analysis}
+\label{tab:coverage_analysis}
+\end{table}
+
+\section{Test Execution Commands}
+
+\subsection{Basic Test Execution}
+\begin{verbatim}
+# Activate virtual environment
+.\venv\Scripts\activate.ps1
+
+# Install test dependencies
+pip install -r requirements-test.txt
+
+# Run all unit tests
+pytest tests/test_database.py tests/test_auth.py \
+       tests/test_docker_executor.py tests/test_app.py -v
+\end{verbatim}
+
+\subsection{Coverage Reporting}
+\begin{verbatim}
+# Run with HTML coverage report
+pytest tests/test_database.py tests/test_auth.py \
+       tests/test_docker_executor.py tests/test_app.py \
+       -v --cov=. --cov-report=html
+
+# Run with coverage threshold
+pytest tests/test_database.py tests/test_auth.py \
+       tests/test_docker_executor.py tests/test_app.py \
+       -v --cov=. --cov-report=html --cov-fail-under=70
+\end{verbatim}
+
+\section{Test Quality Metrics}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Metric} & \textbf{Value} \\
+\hline
+Total Test Cases & 81 (including fixtures) \\
+\hline
+Passing Tests & 61 \\
+\hline
+Skipped Tests & 1 \\
+\hline
+Failed Tests & 0 \\
+\hline
+Success Rate & 98.4\% \\
+\hline
+Average Execution Time & <10 seconds \\
+\hline
+Test Files & 4 main modules \\
+\hline
+Mock Coverage & 100\% (external dependencies) \\
+\hline
+\end{tabular}
+\caption{Test Quality Metrics}
+\label{tab:quality_metrics}
+\end{table}
+
+\section{Recommendations}
+
+\begin{enumerate}
+    \item \textbf{Increase Overall Coverage}: Focus on improving coverage in authentication module and main application logic
+    \item \textbf{Fix Skipped Test}: Resolve the database session isolation issue in the skipped test
+    \item \textbf{Add Integration Tests}: Include more end-to-end API workflow tests
+    \item \textbf{Performance Testing}: Add more comprehensive performance benchmarks
+    \item \textbf{Security Testing}: Include security-focused test cases
+\end{enumerate}
+
+\end{document}

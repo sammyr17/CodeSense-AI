@@ -1,0 +1,267 @@
+% Unit Tests LaTeX Tables for CodeSense AI
+% Copy and paste these tables into Overleaf.com
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\begin{document}
+
+\title{CodeSense AI - Unit Test Cases}
+\author{Test Documentation}
+\date{\today}
+\maketitle
+
+\section{Database Module Tests (test\_database.py)}
+
+\begin{longtable}{|p{1cm}|p{8cm}|p{6cm}|}
+\hline
+\textbf{Test Case \#} & \textbf{Test Case} & \textbf{Required Output} \\
+\hline
+\endhead
+
+1 & test\_password\_hashing & Password is hashed correctly, hash is different from original, verification works \\
+\hline
+2 & test\_password\_verification\_failure & Wrong password fails verification \\
+\hline
+3 & test\_long\_password\_truncation & Long passwords (100+ chars) are handled correctly by bcrypt \\
+\hline
+4 & test\_user\_creation & User is created with correct attributes, password is hashed, ID is assigned \\
+\hline
+5 & test\_get\_user\_by\_username & Existing user is retrieved correctly, non-existent user returns None \\
+\hline
+6 & test\_get\_user\_by\_email & User retrieved by email correctly, non-existent email returns None \\
+\hline
+7 & test\_authenticate\_user\_success & Valid credentials authenticate successfully, last\_login is updated \\
+\hline
+8 & test\_authenticate\_user\_failure & Invalid credentials return None for both wrong password and non-existent user \\
+\hline
+9 & test\_create\_code\_submission & Code submission created with all required fields, ID and timestamp assigned \\
+\hline
+10 & test\_get\_user\_submissions & User submissions retrieved in correct order (newest first), correct count \\
+\hline
+11 & test\_get\_submission\_by\_id & Specific submission retrieved correctly, wrong user\_id returns None \\
+\hline
+12 & test\_database\_connection\_success & Database connection test returns True when successful \\
+\hline
+13 & test\_database\_connection\_failure & Database connection test returns False when connection fails \\
+\hline
+14 & test\_create\_database\_and\_tables\_success & Database tables created successfully, returns True \\
+\hline
+15 & test\_create\_database\_and\_tables\_failure & Database table creation failure handled, returns False \\
+\hline
+\end{longtable}
+
+\section{Authentication Module Tests (test\_auth.py)}
+
+\begin{longtable}{|p{1cm}|p{8cm}|p{6cm}|}
+\hline
+\textbf{Test Case \#} & \textbf{Test Case} & \textbf{Required Output} \\
+\hline
+\endhead
+
+16 & test\_create\_access\_token\_default\_expiry & JWT token created with default expiry, contains correct subject \\
+\hline
+17 & test\_create\_access\_token\_custom\_expiry & JWT token created with custom expiry time (60 minutes) \\
+\hline
+18 & test\_verify\_token\_valid & Valid JWT token is verified successfully, returns correct username \\
+\hline
+19 & test\_verify\_token\_invalid & Invalid token raises HTTPException with 401 status \\
+\hline
+20 & test\_verify\_token\_expired & Expired token raises HTTPException with 401 status \\
+\hline
+21 & test\_verify\_token\_no\_subject & Token without 'sub' field raises HTTPException with 401 status \\
+\hline
+22 & test\_get\_current\_user\_success & Current user retrieved successfully from database using username \\
+\hline
+23 & test\_get\_current\_user\_not\_found & Non-existent user raises HTTPException with 401 status \\
+\hline
+24 & test\_user\_login\_model & UserLogin Pydantic model validates username and password fields \\
+\hline
+25 & test\_user\_signup\_model & UserSignup Pydantic model validates all required and optional fields \\
+\hline
+26 & test\_user\_signup\_model\_optional\_fields & UserSignup model works with only required fields (username, password) \\
+\hline
+27 & test\_user\_response\_model & UserResponse Pydantic model contains all user fields with correct types \\
+\hline
+28 & test\_token\_model & Token Pydantic model contains access\_token, token\_type, and user object \\
+\hline
+\end{longtable}
+
+\section{Docker Executor Tests (test\_docker\_executor.py)}
+
+\begin{longtable}{|p{1cm}|p{8cm}|p{6cm}|}
+\hline
+\textbf{Test Case \#} & \textbf{Test Case} & \textbf{Required Output} \\
+\hline
+\endhead
+
+29 & test\_init\_success & DockerExecutor initializes successfully, client is available, ping works \\
+\hline
+30 & test\_init\_failure & DockerExecutor handles Docker unavailability, client is None, not available \\
+\hline
+31 & test\_get\_docker\_image & Correct Docker images returned for each language (python, js, java, cpp, go) \\
+\hline
+32 & test\_get\_file\_extension & Correct file extensions returned for each language (.py, .js, .java, .cpp, .go) \\
+\hline
+33 & test\_get\_run\_command & Appropriate run commands generated for each language with proper flags \\
+\hline
+34 & test\_execute\_code\_docker\_unavailable & Returns error response when Docker is not available \\
+\hline
+35 & test\_execute\_code\_success & Successful code execution returns stdout, exit\_code 0, no errors \\
+\hline
+36 & test\_execute\_code\_failure & Failed code execution returns stderr, exit\_code 1, error message \\
+\hline
+37 & test\_execute\_code\_timeout & Code execution timeout returns exit\_code 124, timeout error message \\
+\hline
+38 & test\_execute\_code\_image\_not\_found & Missing Docker image returns appropriate error message \\
+\hline
+39 & test\_cleanup & Docker cleanup removes containers with 'codesense' in name only \\
+\hline
+40 & test\_global\_instance\_exists & Global docker\_executor instance exists and is DockerExecutor type \\
+\hline
+41 & test\_global\_instance\_methods & Global instance methods work correctly (get\_docker\_image, get\_file\_extension) \\
+\hline
+\end{longtable}
+
+\section{Application Logic Tests (test\_app.py)}
+
+\begin{longtable}{|p{1cm}|p{8cm}|p{6cm}|}
+\hline
+\textbf{Test Case \#} & \textbf{Test Case} & \textbf{Required Output} \\
+\hline
+\endhead
+
+42 & test\_analyze\_code\_complexity\_success & Code complexity analysis returns all required metrics (cyclomatic, LOC, time, space) \\
+\hline
+43 & test\_analyze\_code\_complexity\_lizard\_failure & Fallback to script complexity when Lizard fails, still returns valid results \\
+\hline
+44 & test\_analyze\_code\_complexity\_complete\_failure & Graceful handling when both Lizard and fallback fail, returns default values \\
+\hline
+45 & test\_calculate\_script\_complexity\_python & Python code complexity calculation detects control structures correctly \\
+\hline
+46 & test\_calculate\_script\_complexity\_javascript & JavaScript code complexity calculation detects control structures correctly \\
+\hline
+47 & test\_estimate\_time\_complexity & Time complexity estimation returns appropriate Big O notation (O(1), O(n), O(n²)) \\
+\hline
+48 & test\_estimate\_space\_complexity & Space complexity estimation detects data structures and returns O(1) or O(n) \\
+\hline
+49 & test\_calculate\_overall\_score & Overall score calculation returns values between 0-100, higher for better code \\
+\hline
+50 & test\_code\_analysis\_request & CodeAnalysisRequest Pydantic model validates code and language fields \\
+\hline
+51 & test\_error\_item & ErrorItem Pydantic model validates line, message, and severity fields \\
+\hline
+52 & test\_code\_analysis\_response & CodeAnalysisResponse model contains all required response fields \\
+\hline
+53 & test\_debug\_ping & Debug ping endpoint returns \{"ok": True\} with 200 status \\
+\hline
+54 & test\_debug\_models\_success & Debug models endpoint returns API provider info and model list \\
+\hline
+55 & test\_debug\_models\_no\_api\_key & Debug models endpoint returns 500 error when no API key configured \\
+\hline
+56 & test\_analyze\_code\_success & Successful code analysis returns all fields: errors, suggestions, optimizations, output \\
+\hline
+57 & test\_analyze\_code\_execution\_failure & Failed code execution skips Gemini analysis, returns execution error \\
+\hline
+58 & test\_analyze\_code\_missing\_auth & Code analysis without authentication returns 403 Forbidden \\
+\hline
+59 & test\_analyze\_code\_missing\_data & Code analysis with missing required fields returns 400 Bad Request \\
+\hline
+60 & test\_get\_submissions & User submissions endpoint returns list of submissions for authenticated user \\
+\hline
+61 & test\_get\_submissions\_no\_auth & Submissions endpoint without authentication returns 403 Forbidden \\
+\hline
+\end{longtable}
+
+\section{Integration Tests (test\_api\_integration.py)}
+
+\begin{longtable}{|p{1cm}|p{8cm}|p{6cm}|}
+\hline
+\textbf{Test Case \#} & \textbf{Test Case} & \textbf{Required Output} \\
+\hline
+\endhead
+
+62 & test\_user\_registration\_and\_login\_flow & Complete user registration → login → profile retrieval workflow works \\
+\hline
+63 & test\_duplicate\_user\_registration & Duplicate user registration returns 400 error with appropriate message \\
+\hline
+64 & test\_invalid\_login & Invalid credentials return 401 Unauthorized with error message \\
+\hline
+65 & test\_complete\_code\_analysis\_workflow & End-to-end code analysis: auth → Docker execution → Gemini analysis → response \\
+\hline
+66 & test\_code\_analysis\_without\_auth & Code analysis without authentication returns 403 Forbidden \\
+\hline
+67 & test\_submission\_history\_workflow & Submission creation and retrieval workflow works correctly \\
+\hline
+68 & test\_debug\_endpoints & Debug endpoints (ping, models) return appropriate responses \\
+\hline
+69 & test\_invalid\_endpoints & Non-existent endpoints return 404 Not Found \\
+\hline
+70 & test\_malformed\_requests & Invalid JSON and missing fields return 422/400 errors appropriately \\
+\hline
+71 & test\_ping\_response\_time & Ping endpoint responds within 1 second \\
+\hline
+72 & test\_analysis\_response\_time & Code analysis completes within 10 seconds (with mocked dependencies) \\
+\hline
+\end{longtable}
+
+\section{Test Configuration and Fixtures}
+
+\begin{longtable}{|p{1cm}|p{8cm}|p{6cm}|}
+\hline
+\textbf{Test Case \#} & \textbf{Test Case} & \textbf{Required Output} \\
+\hline
+\endhead
+
+73 & temp\_dir fixture & Provides temporary directory for file operations, cleans up automatically \\
+\hline
+74 & mock\_docker\_client fixture & Provides mocked Docker client with successful container execution \\
+\hline
+75 & test\_db fixture & Provides in-memory SQLite database for testing, creates tables \\
+\hline
+76 & client fixture & Provides FastAPI test client for API endpoint testing \\
+\hline
+77 & authenticated\_client fixture & Provides authenticated test client with valid JWT token \\
+\hline
+78 & sample\_code fixture & Provides sample code snippets for multiple programming languages \\
+\hline
+79 & mock\_gemini\_response fixture & Provides mocked Gemini AI API response for testing \\
+\hline
+80 & setup\_test\_env fixture & Sets up test environment variables automatically \\
+\hline
+81 & mock\_lizard\_analysis fixture & Provides mocked Lizard complexity analysis results \\
+\hline
+\end{longtable}
+
+\section{Test Summary}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Test Module} & \textbf{Test Count} & \textbf{Coverage Target} \\
+\hline
+Database Tests & 15 & 90\%+ \\
+\hline
+Authentication Tests & 13 & 85\%+ \\
+\hline
+Docker Executor Tests & 13 & 80\%+ \\
+\hline
+Application Logic Tests & 20 & 85\%+ \\
+\hline
+Integration Tests & 11 & 70\%+ \\
+\hline
+Test Fixtures & 9 & N/A \\
+\hline
+\textbf{Total} & \textbf{81} & \textbf{80\%+} \\
+\hline
+\end{tabular}
+\caption{Unit Test Summary by Module}
+\end{table}
+
+\end{document}

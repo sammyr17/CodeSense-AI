@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1000" viewBox="0 0 1400 1000">
+  <defs>
+    <style>
+      .class-box { fill: #f8f9fa; stroke: #343a40; stroke-width: 2; }
+      .class-header { fill: #007bff; }
+      .class-title { fill: white; font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; text-anchor: middle; }
+      .class-text { fill: #343a40; font-family: Arial, sans-serif; font-size: 11px; }
+      .method-text { fill: #495057; font-family: Arial, sans-serif; font-size: 10px; }
+      .relationship-line { stroke: #6c757d; stroke-width: 2; fill: none; }
+      .arrow { fill: #6c757d; }
+      .composition-line { stroke: #dc3545; stroke-width: 2; fill: none; }
+      .dependency-line { stroke: #28a745; stroke-width: 2; fill: none; stroke-dasharray: 5,5; }
+    </style>
+  </defs>
+  
+  <!-- Title -->
+  <text x="700" y="30" class="class-title" style="font-size: 18px; fill: #343a40;">CodeSense AI - Class Diagram</text>
+  
+  <!-- FastAPI Application Class -->
+  <g id="FastAPIApp">
+    <rect x="50" y="60" width="200" height="120" class="class-box"/>
+    <rect x="50" y="60" width="200" height="30" class="class-header"/>
+    <text x="150" y="80" class="class-title">FastAPI Application</text>
+    <text x="60" y="105" class="class-text">+ app: FastAPI</text>
+    <text x="60" y="120" class="class-text">+ router: APIRouter</text>
+    <text x="60" y="135" class="class-text">+ auth_router: APIRouter</text>
+    <text x="60" y="155" class="method-text">+ read_root(): HTMLResponse</text>
+    <text x="60" y="170" class="method-text">+ include_routers()</text>
+  </g>
+  
+  <!-- User Model -->
+  <g id="User">
+    <rect x="300" y="60" width="220" height="200" class="class-box"/>
+    <rect x="300" y="60" width="220" height="30" class="class-header"/>
+    <text x="410" y="80" class="class-title">User (SQLAlchemy Model)</text>
+    <text x="310" y="105" class="class-text">+ id: Integer (PK)</text>
+    <text x="310" y="120" class="class-text">+ username: String (Unique)</text>
+    <text x="310" y="135" class="class-text">+ email: String (Unique)</text>
+    <text x="310" y="150" class="class-text">+ hashed_password: String</text>
+    <text x="310" y="165" class="class-text">+ full_name: String</text>
+    <text x="310" y="180" class="class-text">+ is_active: Boolean</text>
+    <text x="310" y="195" class="class-text">+ created_at: DateTime</text>
+    <text x="310" y="210" class="class-text">+ last_login: DateTime</text>
+    <text x="310" y="230" class="method-text">+ __tablename__ = "users"</text>
+    <text x="310" y="245" class="method-text">+ relationships with CodeSubmission</text>
+  </g>
+  
+  <!-- CodeSubmission Model -->
+  <g id="CodeSubmission">
+    <rect x="560" y="60" width="220" height="180" class="class-box"/>
+    <rect x="560" y="60" width="220" height="30" class="class-header"/>
+    <text x="670" y="80" class="class-title">CodeSubmission (Model)</text>
+    <text x="570" y="105" class="class-text">+ id: Integer (PK)</text>
+    <text x="570" y="120" class="class-text">+ user_id: Integer (FK)</text>
+    <text x="570" y="135" class="class-text">+ language: String</text>
+    <text x="570" y="150" class="class-text">+ file_path: String</text>
+    <text x="570" y="165" class="class-text">+ analysis_result: String</text>
+    <text x="570" y="180" class="class-text">+ created_at: DateTime</text>
+    <text x="570" y="195" class="class-text">+ file_name: String</text>
+    <text x="570" y="215" class="method-text">+ __tablename__ = "code_submissions"</text>
+    <text x="570" y="230" class="method-text">+ belongs to User</text>
+  </g>
+  
+  <!-- DockerExecutor Class -->
+  <g id="DockerExecutor">
+    <rect x="820" y="60" width="250" height="220" class="class-box"/>
+    <rect x="820" y="60" width="250" height="30" class="class-header"/>
+    <text x="945" y="80" class="class-title">DockerExecutor</text>
+    <text x="830" y="105" class="class-text">+ client: docker.DockerClient</text>
+    <text x="830" y="125" class="method-text">+ __init__()</text>
+    <text x="830" y="140" class="method-text">+ is_available(): bool</text>
+    <text x="830" y="155" class="method-text">+ get_docker_image(language): str</text>
+    <text x="830" y="170" class="method-text">+ get_file_extension(language): str</text>
+    <text x="830" y="185" class="method-text">+ get_run_command(language, filename): list</text>
+    <text x="830" y="200" class="method-text">+ execute_code(code, language): Dict</text>
+    <text x="830" y="215" class="method-text">+ cleanup()</text>
+    <text x="830" y="235" class="class-text">Supported Languages:</text>
+    <text x="830" y="250" class="method-text">Python, JavaScript, Java, C++, Go</text>
+    <text x="830" y="265" class="method-text">Security: Memory/CPU limits, no network</text>
+  </g>
+  
+  <!-- Database Module -->
+  <g id="Database">
+    <rect x="50" y="300" width="280" height="280" class="class-box"/>
+    <rect x="50" y="300" width="280" height="30" class="class-header"/>
+    <text x="190" y="320" class="class-title">Database Module</text>
+    <text x="60" y="345" class="class-text">+ engine: SQLAlchemy Engine</text>
+    <text x="60" y="360" class="class-text">+ SessionLocal: sessionmaker</text>
+    <text x="60" y="375" class="class-text">+ Base: declarative_base</text>
+    <text x="60" y="390" class="class-text">+ pwd_context: CryptContext</text>
+    <text x="60" y="410" class="method-text">+ get_db(): Session</text>
+    <text x="60" y="425" class="method-text">+ verify_password(plain, hashed): bool</text>
+    <text x="60" y="440" class="method-text">+ get_password_hash(password): str</text>
+    <text x="60" y="455" class="method-text">+ get_user_by_username(db, username): User</text>
+    <text x="60" y="470" class="method-text">+ get_user_by_email(db, email): User</text>
+    <text x="60" y="485" class="method-text">+ create_user(db, username, password): User</text>
+    <text x="60" y="500" class="method-text">+ authenticate_user(db, username, pwd): User</text>
+    <text x="60" y="515" class="method-text">+ create_code_submission(...): CodeSubmission</text>
+    <text x="60" y="530" class="method-text">+ get_user_submissions(db, user_id): List</text>
+    <text x="60" y="545" class="method-text">+ get_submission_by_id(...): CodeSubmission</text>
+    <text x="60" y="560" class="method-text">+ test_database_connection(): bool</text>
+    <text x="60" y="575" class="method-text">+ create_database_and_tables(): bool</text>
+  </g>
+  
+  <!-- Authentication Module -->
+  <g id="Auth">
+    <rect x="360" y="300" width="280" height="280" class="class-box"/>
+    <rect x="360" y="300" width="280" height="30" class="class-header"/>
+    <text x="500" y="320" class="class-title">Authentication Module</text>
+    <text x="370" y="345" class="class-text">+ auth_router: APIRouter</text>
+    <text x="370" y="360" class="class-text">+ security: HTTPBearer</text>
+    <text x="370" y="375" class="class-text">+ SECRET_KEY: str</text>
+    <text x="370" y="390" class="class-text">+ ALGORITHM: str</text>
+    <text x="370" y="410" class="method-text">+ create_access_token(data): str</text>
+    <text x="370" y="425" class="method-text">+ verify_token(credentials): str</text>
+    <text x="370" y="440" class="method-text">+ get_current_user(username, db): User</text>
+    <text x="370" y="455" class="method-text">+ login(user_data, db): Token</text>
+    <text x="370" y="470" class="method-text">+ signup(user_data, db): Token</text>
+    <text x="370" y="485" class="method-text">+ get_current_user_info(user): UserResponse</text>
+    <text x="370" y="500" class="method-text">+ logout(): dict</text>
+    <text x="370" y="520" class="class-text">Pydantic Models:</text>
+    <text x="370" y="535" class="method-text">- UserLogin, UserSignup</text>
+    <text x="370" y="550" class="method-text">- UserResponse, Token</text>
+    <text x="370" y="565" class="method-text">JWT Token Management</text>
+  </g>
+  
+  <!-- API Routes Module -->
+  <g id="APIRoutes">
+    <rect x="670" y="300" width="300" height="280" class="class-box"/>
+    <rect x="670" y="300" width="300" height="30" class="class-header"/>
+    <text x="820" y="320" class="class-title">API Routes Module</text>
+    <text x="680" y="345" class="class-text">+ router: APIRouter</text>
+    <text x="680" y="360" class="class-text">+ docker_executor: DockerExecutor</text>
+    <text x="680" y="375" class="class-text">+ logger: Logger</text>
+    <text x="680" y="395" class="method-text">+ analyze_code_complexity(code, lang): Dict</text>
+    <text x="680" y="410" class="method-text">+ calculate_script_complexity(...): float</text>
+    <text x="680" y="425" class="method-text">+ estimate_time_complexity(...): str</text>
+    <text x="680" y="440" class="method-text">+ estimate_space_complexity(...): str</text>
+    <text x="680" y="455" class="method-text">+ calculate_overall_score(...): int</text>
+    <text x="680" y="470" class="method-text">+ debug_ping(): dict</text>
+    <text x="680" y="485" class="method-text">+ debug_models(): dict</text>
+    <text x="680" y="500" class="method-text">+ analyze_code(request, user, db): Response</text>
+    <text x="680" y="515" class="method-text">+ get_submissions(user, db): Response</text>
+    <text x="680" y="530" class="method-text">+ get_submission(id, user, db): Response</text>
+    <text x="680" y="550" class="class-text">Pydantic Models:</text>
+    <text x="680" y="565" class="method-text">- CodeAnalysisRequest, ErrorItem</text>
+    <text x="680" y="580" class="method-text">- CodeAnalysisResponse</text>
+  </g>
+  
+  <!-- External Services -->
+  <g id="ExternalServices">
+    <rect x="1000" y="300" width="200" height="160" class="class-box"/>
+    <rect x="1000" y="300" width="200" height="30" class="class-header"/>
+    <text x="1100" y="320" class="class-title">External Services</text>
+    <text x="1010" y="345" class="class-text">Google Gemini AI</text>
+    <text x="1010" y="360" class="method-text">- Code Analysis</text>
+    <text x="1010" y="375" class="method-text">- Quality Metrics</text>
+    <text x="1010" y="390" class="method-text">- Suggestions</text>
+    <text x="1010" y="410" class="class-text">Docker Engine</text>
+    <text x="1010" y="425" class="method-text">- Code Execution</text>
+    <text x="1010" y="440" class="method-text">- Container Management</text>
+    <text x="1010" y="455" class="method-text">- Security Isolation</text>
+  </g>
+  
+  <!-- Frontend Components -->
+  <g id="Frontend">
+    <rect x="50" y="620" width="300" height="200" class="class-box"/>
+    <rect x="50" y="620" width="300" height="30" class="class-header"/>
+    <text x="200" y="640" class="class-title">Frontend (React Components)</text>
+    <text x="60" y="665" class="class-text">CodeSenseAI (Main Component)</text>
+    <text x="60" y="680" class="method-text">- Authentication State</text>
+    <text x="60" y="695" class="method-text">- Code Editor (Monaco)</text>
+    <text x="60" y="710" class="method-text">- Analysis Results Display</text>
+    <text x="60" y="725" class="method-text">- Submission History</text>
+    <text x="60" y="740" class="method-text">- User Management</text>
+    <text x="60" y="760" class="class-text">State Management:</text>
+    <text x="60" y="775" class="method-text">- useState hooks for UI state</text>
+    <text x="60" y="790" class="method-text">- API communication</text>
+    <text x="60" y="805" class="method-text">- File upload/download</text>
+  </g>
+  
+  <!-- Relationships -->
+  
+  <!-- User -> CodeSubmission (One-to-Many) -->
+  <line x1="520" y1="160" x2="560" y2="160" class="relationship-line"/>
+  <polygon points="555,155 565,160 555,165" class="arrow"/>
+  <text x="530" y="150" class="method-text">1..*</text>
+  
+  <!-- Database -> User -->
+  <line x1="330" y1="300" x2="410" y2="260" class="relationship-line"/>
+  <polygon points="405,265 415,260 405,255" class="arrow"/>
+  
+  <!-- Database -> CodeSubmission -->
+  <line x1="330" y1="300" x2="670" y2="240" class="relationship-line"/>
+  <polygon points="665,245 675,240 665,235" class="arrow"/>
+  
+  <!-- Auth -> Database (Uses) -->
+  <line x1="360" y1="440" x2="330" y2="440" class="dependency-line"/>
+  <text x="335" y="430" class="method-text">uses</text>
+  
+  <!-- API Routes -> DockerExecutor (Composition) -->
+  <line x1="820" y1="360" x2="820" y2="280" class="composition-line"/>
+  <polygon points="815,285 820,280 825,285" class="arrow"/>
+  <text x="825" y="320" class="method-text">uses</text>
+  
+  <!-- API Routes -> Database (Uses) -->
+  <line x1="670" y1="440" x2="330" y2="440" class="dependency-line"/>
+  <text x="500" y="430" class="method-text">uses</text>
+  
+  <!-- API Routes -> Auth (Uses) -->
+  <line x1="670" y1="380" x2="640" y2="380" class="dependency-line"/>
+  <text x="645" y="370" class="method-text">uses</text>
+  
+  <!-- FastAPI -> API Routes -->
+  <line x1="250" y1="120" x2="670" y2="360" class="dependency-line"/>
+  <text x="460" y="240" class="method-text">includes</text>
+  
+  <!-- FastAPI -> Auth -->
+  <line x1="250" y1="120" x2="360" y2="360" class="dependency-line"/>
+  <text x="305" y="240" class="method-text">includes</text>
+  
+  <!-- API Routes -> External Services -->
+  <line x1="970" y1="440" x2="1000" y2="380" class="dependency-line"/>
+  <text x="975" y="410" class="method-text">uses</text>
+  
+  <!-- Frontend -> FastAPI -->
+  <line x1="200" y1="620" x2="150" y2="180" class="dependency-line"/>
+  <text x="120" y="400" class="method-text">HTTP API</text>
+  
+  <!-- Legend -->
+  <g id="Legend">
+    <rect x="1100" y="620" width="250" height="180" class="class-box"/>
+    <rect x="1100" y="620" width="250" height="30" class="class-header"/>
+    <text x="1225" y="640" class="class-title">Legend</text>
+    
+    <line x1="1120" y1="670" x2="1180" y2="670" class="relationship-line"/>
+    <polygon points="1175,665 1185,670 1175,675" class="arrow"/>
+    <text x="1190" y="675" class="method-text">Association</text>
+    
+    <line x1="1120" y1="690" x2="1180" y2="690" class="composition-line"/>
+    <text x="1190" y="695" class="method-text">Composition</text>
+    
+    <line x1="1120" y1="710" x2="1180" y2="710" class="dependency-line"/>
+    <text x="1190" y="715" class="method-text">Dependency</text>
+    
+    <text x="1110" y="740" class="method-text">PK = Primary Key</text>
+    <text x="1110" y="755" class="method-text">FK = Foreign Key</text>
+    <text x="1110" y="770" class="method-text">+ = Public</text>
+    <text x="1110" y="785" class="method-text">- = Private</text>
+  </g>
+  
+</svg>
