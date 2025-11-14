@@ -1,4 +1,4 @@
-% Test Status by Module - LaTeX Table
+% CodeSense AI - Complete Unit Test Cases Table
 % Copy and paste this table into Overleaf.com
 
 \documentclass{article}
@@ -7,157 +7,204 @@
 \usepackage{array}
 \usepackage{xcolor}
 \usepackage{geometry}
-\geometry{a4paper, margin=1in}
+\usepackage{longtable}
+\geometry{a4paper, margin=0.5in}
 
 \begin{document}
 
-\title{CodeSense AI - Test Status by Module}
+\title{CodeSense AI - Complete Unit Test Cases}
 \author{Test Documentation}
 \date{\today}
 \maketitle
 
-\section{Unit Test Status Summary}
+\section{Complete Unit Test Cases Table}
 
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|c|c|c|}
+\begin{longtable}{|c|p{2.5cm}|p{6cm}|p{5cm}|}
 \hline
-\textbf{Module} & \textbf{Tests} & \textbf{Status} & \textbf{Coverage} & \textbf{Priority} \\
+\textbf{Test \#} & \textbf{Module} & \textbf{Test Case Brief} & \textbf{Required Output} \\
 \hline
-\textbf{Database} & 16/16 & \textcolor{green}{\textbf{100\% Pass}} & 87\% & High \\
-\hline
-\textbf{Authentication} & 13/13 & \textcolor{green}{\textbf{100\% Pass}} & 74\% & High \\
-\hline
-\textbf{Docker Executor} & 13/13 & \textcolor{green}{\textbf{100\% Pass}} & 85\% & High \\
-\hline
-\textbf{Application Logic} & 19/20 & \textcolor{orange}{\textbf{95\% Pass}} & 97\% & High \\
-\hline
-\hline
-\textbf{Total Unit Tests} & \textbf{61/62} & \textcolor{green}{\textbf{98.4\% Pass}} & \textbf{63.5\%} & \textbf{High} \\
-\hline
-\end{tabular}
-\caption{Unit Test Status by Module}
-\label{tab:test_status}
-\end{table}
+\endfirsthead
 
-\section{Detailed Test Breakdown}
+\hline
+\textbf{Test \#} & \textbf{Module} & \textbf{Test Case Brief} & \textbf{Required Output} \\
+\hline
+\endhead
 
-\subsection{Database Module Tests (test\_database.py)}
-\begin{itemize}
-    \item \textbf{Password Utilities}: 3/3 tests passing
-    \item \textbf{User Model}: 6/6 tests passing
-    \item \textbf{Code Submission Model}: 3/3 tests passing
-    \item \textbf{Database Utilities}: 4/4 tests passing
-\end{itemize}
+\hline
+\endfoot
 
-\subsection{Authentication Module Tests (test\_auth.py)}
-\begin{itemize}
-    \item \textbf{JWT Utilities}: 6/6 tests passing
-    \item \textbf{Get Current User}: 2/2 tests passing
-    \item \textbf{Pydantic Models}: 5/5 tests passing
-\end{itemize}
+\hline
+\endlastfoot
 
-\subsection{Docker Executor Tests (test\_docker\_executor.py)}
-\begin{itemize}
-    \item \textbf{DockerExecutor Class}: 11/11 tests passing
-    \item \textbf{Global Executor Instance}: 2/2 tests passing
-\end{itemize}
+% Database Module Tests (16 tests)
+1 & DB & Test database connection functionality & Returns True for successful connection \\
+\hline
+2 & DB & Test password hashing with bcrypt & Hashed password differs from original, verification succeeds \\
+\hline
+3 & DB & Test password verification failure & Returns False for incorrect password \\
+\hline
+4 & DB & Test long password truncation for bcrypt & Passwords >72 chars are truncated but still verify correctly \\
+\hline
+5 & DB & Test user creation in database & User object created with correct attributes and auto-generated ID \\
+\hline
+6 & DB & Test get user by username & Returns correct User object for existing username \\
+\hline
+7 & DB & Test get user by email & Returns correct User object for existing email \\
+\hline
+8 & DB & Test successful user authentication & Returns User object for correct username/password combination \\
+\hline
+9 & DB & Test failed user authentication & Returns None for incorrect password \\
+\hline
+10 & DB & Test code submission creation & CodeSubmission object created with user\_id, language, file\_path \\
+\hline
+11 & DB & Test get user submissions & Returns list of submissions ordered by creation date \\
+\hline
+12 & DB & Test get submission by ID & Returns specific submission belonging to user \\
+\hline
+13 & DB & Test database connection success & Mock successful database connection \\
+\hline
+14 & DB & Test database connection failure & Mock failed database connection, returns False \\
+\hline
+15 & DB & Test create database and tables success & Mock successful table creation \\
+\hline
+16 & DB & Test create database and tables failure & Mock failed table creation, handles exception \\
+\hline
 
-\subsection{Application Logic Tests (test\_app.py)}
-\begin{itemize}
-    \item \textbf{Complexity Analysis}: 8/8 tests passing
-    \item \textbf{Pydantic Models}: 3/3 tests passing
-    \item \textbf{API Endpoints}: 8/9 tests passing (1 skipped)
-\end{itemize}
+% Authentication Module Tests (13 tests)
+17 & Authentication & Test create access token with default expiry & JWT token with 30-minute expiry and correct payload \\
+\hline
+18 & Authentication & Test create access token with custom expiry & JWT token with specified expiry time \\
+\hline
+19 & Authentication & Test verify valid token & Returns username from valid JWT token \\
+\hline
+20 & Authentication & Test verify invalid token & Raises HTTPException for malformed token \\
+\hline
+21 & Authentication & Test verify expired token & Raises HTTPException for expired token \\
+\hline
+22 & Authentication & Test verify token without subject & Raises HTTPException for token missing 'sub' claim \\
+\hline
+23 & Authentication & Test get current user success & Returns User object for valid token and existing user \\
+\hline
+24 & Authentication & Test get current user not found & Raises HTTPException when user doesn't exist \\
+\hline
+25 & Authentication & Test UserLogin Pydantic model & Validates username and password fields \\
+\hline
+26 & Authentication & Test UserSignup Pydantic model & Validates all required signup fields \\
+\hline
+27 & Authentication & Test UserSignup optional fields & Handles optional full\_name field correctly \\
+\hline
+28 & Authentication & Test UserResponse Pydantic model & Returns user data without sensitive information \\
+\hline
+29 & Authentication & Test Token Pydantic model & Validates access\_token and token\_type fields \\
+\hline
 
-\section{Coverage Targets vs Actual}
+% Docker Executor Module Tests (13 tests)
+30 & Docker Executor & Test Docker client initialization success & DockerExecutor with working client, is\_available() returns True \\
+\hline
+31 & Docker Executor & Test Docker client initialization failure & DockerExecutor with None client, is\_available() returns False \\
+\hline
+32 & Docker Executor & Test get Docker image for languages & Returns correct Docker images: python:3.11-slim, node:22-alpine, etc. \\
+\hline
+33 & Docker Executor & Test get file extension for languages & Returns correct extensions: .py, .js, .cpp, .java, .go \\
+\hline
+34 & Docker Executor & Test get run command for languages & Returns correct execution commands for each language \\
+\hline
+35 & Docker Executor & Test execute code when Docker unavailable & Returns error result when Docker client is None \\
+\hline
+36 & Docker Executor & Test successful code execution & Returns result with exit\_code=0, stdout, stderr, execution\_time \\
+\hline
+37 & Docker Executor & Test failed code execution & Returns result with non-zero exit\_code and error message \\
+\hline
+38 & Docker Executor & Test code execution timeout & Returns timeout error when container exceeds time limit \\
+\hline
+39 & Docker Executor & Test image not found error & Returns error when Docker image doesn't exist \\
+\hline
+40 & Docker Executor & Test cleanup functionality & Removes temporary files and directories after execution \\
+\hline
+41 & Docker Executor & Test global executor instance exists & Global docker\_executor instance is available \\
+\hline
+42 & Docker Executor & Test global executor methods & Global instance has execute\_code and cleanup methods \\
+\hline
+
+% Application Logic Module Tests (19 tests)
+43 & App Logic & Test analyze code complexity success & Returns complexity metrics: cyclomatic, LOC, time/space complexity \\
+\hline
+44 & App Logic & Test analyze code complexity Lizard failure & Falls back to script analysis when Lizard fails \\
+\hline
+45 & App Logic & Test analyze code complexity complete failure & Returns default values when all analysis methods fail \\
+\hline
+46 & App Logic & Test calculate script complexity Python & Counts functions, classes, loops, conditions in Python code \\
+\hline
+47 & App Logic & Test calculate script complexity JavaScript & Counts functions, classes, loops, conditions in JS code \\
+\hline
+48 & App Logic & Test estimate time complexity & Returns appropriate Big O notation based on code patterns \\
+\hline
+49 & App Logic & Test estimate space complexity & Returns space complexity based on data structures used \\
+\hline
+50 & App Logic & Test calculate overall score & Returns score 0-100 based on complexity metrics \\
+\hline
+51 & App Logic & Test CodeAnalysisRequest Pydantic model & Validates code and language fields \\
+\hline
+52 & App Logic & Test ErrorItem Pydantic model & Validates line, column, message, severity fields \\
+\hline
+53 & App Logic & Test CodeAnalysisResponse Pydantic model & Validates all response fields including complexity metrics \\
+\hline
+54 & App Logic & Test debug ping endpoint & Returns \{"status": "ok", "message": "Server is running"\} \\
+\hline
+55 & App Logic & Test debug models endpoint success & Returns available AI models when API key is present \\
+\hline
+56 & App Logic & Test debug models endpoint no API key & Returns error message when GEMINI\_API\_KEY is missing \\
+\hline
+57 & App Logic & Test analyze code endpoint success & Returns analysis result with AI response and complexity metrics \\
+\hline
+58 & App Logic & Test analyze code execution failure & Handles Docker execution errors gracefully \\
+\hline
+59 & App Logic & Test analyze code missing authentication & Returns 403 Forbidden when no auth token provided \\
+\hline
+60 & App Logic & Test get submissions endpoint & Returns user's code submissions with pagination \\
+\hline
+61 & App Logic & Test get submissions no authentication & Returns 403 Forbidden when no auth token provided \\
+\hline
+
+\end{longtable}
+
+\section{Test Execution Summary}
 
 \begin{table}[h]
 \centering
 \begin{tabular}{|l|c|c|c|}
 \hline
-\textbf{Component} & \textbf{Target Coverage} & \textbf{Actual Coverage} & \textbf{Status} \\
+\textbf{Module} & \textbf{Test Count} & \textbf{Pass Rate} & \textbf{Coverage} \\
 \hline
-Database Operations & 90\%+ & 87\% & \textcolor{orange}{Near Target} \\
+Database & 16 & 100\% & 87\% \\
 \hline
-Authentication & 85\%+ & 74\% & \textcolor{orange}{Below Target} \\
+Authentication & 13 & 100\% & 74\% \\
 \hline
-Docker Executor & 80\%+ & 85\% & \textcolor{green}{Above Target} \\
+Docker Executor & 13 & 100\% & 85\% \\
 \hline
-API Endpoints & 85\%+ & 97\% & \textcolor{green}{Excellent} \\
+Application Logic & 19 & 100\% & 97\% \\
 \hline
-\textbf{Overall Project} & \textbf{80\%+} & \textbf{63.5\%} & \textcolor{red}{\textbf{Below Target}} \\
+\textbf{Total} & \textbf{61} & \textbf{100\%} & \textbf{63.5\%} \\
 \hline
 \end{tabular}
-\caption{Coverage Analysis}
-\label{tab:coverage_analysis}
+\caption{Test Execution Summary}
 \end{table}
 
-\section{Test Execution Commands}
+\section{Test Commands}
 
-\subsection{Basic Test Execution}
+\subsection{Run All Tests}
 \begin{verbatim}
 # Activate virtual environment
 .\venv\Scripts\activate.ps1
 
-# Install test dependencies
-pip install -r requirements-test.txt
-
 # Run all unit tests
 pytest tests/test_database.py tests/test_auth.py \
        tests/test_docker_executor.py tests/test_app.py -v
-\end{verbatim}
 
-\subsection{Coverage Reporting}
-\begin{verbatim}
-# Run with HTML coverage report
+# Run with coverage
 pytest tests/test_database.py tests/test_auth.py \
        tests/test_docker_executor.py tests/test_app.py \
        -v --cov=. --cov-report=html
-
-# Run with coverage threshold
-pytest tests/test_database.py tests/test_auth.py \
-       tests/test_docker_executor.py tests/test_app.py \
-       -v --cov=. --cov-report=html --cov-fail-under=70
 \end{verbatim}
-
-\section{Test Quality Metrics}
-
-\begin{table}[h]
-\centering
-\begin{tabular}{|l|c|}
-\hline
-\textbf{Metric} & \textbf{Value} \\
-\hline
-Total Test Cases & 81 (including fixtures) \\
-\hline
-Passing Tests & 61 \\
-\hline
-Skipped Tests & 1 \\
-\hline
-Failed Tests & 0 \\
-\hline
-Success Rate & 98.4\% \\
-\hline
-Average Execution Time & <10 seconds \\
-\hline
-Test Files & 4 main modules \\
-\hline
-Mock Coverage & 100\% (external dependencies) \\
-\hline
-\end{tabular}
-\caption{Test Quality Metrics}
-\label{tab:quality_metrics}
-\end{table}
-
-\section{Recommendations}
-
-\begin{enumerate}
-    \item \textbf{Increase Overall Coverage}: Focus on improving coverage in authentication module and main application logic
-    \item \textbf{Fix Skipped Test}: Resolve the database session isolation issue in the skipped test
-    \item \textbf{Add Integration Tests}: Include more end-to-end API workflow tests
-    \item \textbf{Performance Testing}: Add more comprehensive performance benchmarks
-    \item \textbf{Security Testing}: Include security-focused test cases
-\end{enumerate}
 
 \end{document}

@@ -1,0 +1,269 @@
+% --- CHAPTER 5: SYSTEM REQUIREMENT SPECIFICATION ---
+\chapter{System Requirement Specification}
+This chapter presents the functional, non-functional, hardware, and software requirements for the proposed \textbf{CodeSense AI} system. The goal of the system is to provide secure, comprehensive code analysis by integrating containerized code execution, AI-powered analysis, and quantitative complexity assessment into a unified, web-based platform.
+
+\section{Functional Requirements}
+The system is designed to provide secure code execution, intelligent analysis, and comprehensive quality assessment. Its core functional requirements include:
+
+\begin{itemize}
+    \item \textbf{Multi-Language Code Execution:} Users can submit source code in multiple programming languages (Python, JavaScript, Java, C++, Go) through a web interface. The system automatically detects the programming language and executes the code in appropriate containerized environments.
+    
+    \item \textbf{Secure Containerized Execution:} The system uses Docker containers to provide isolated, secure execution environments for user-submitted code. Each execution session is completely isolated with appropriate resource constraints (CPU, memory, network) to prevent system compromise and ensure fair resource usage.
+    
+    \item \textbf{Real-Time Code Analysis:} Upon successful code execution, the system performs comprehensive analysis using multiple integrated components:
+    \begin{itemize}
+        \item \textbf{AI-Powered Analysis:} Integrates Google Gemini AI to provide intelligent, context-aware code analysis, suggestions, and quality assessment based on both source code and execution results.
+        \item \textbf{Complexity Assessment:} Uses the Lizard library to calculate cyclomatic complexity metrics, providing quantitative measures of code maintainability and structural complexity.
+        \item \textbf{Execution Validation:} Captures and analyzes code execution output, runtime behavior, and error conditions to provide comprehensive feedback.
+    \end{itemize}
+    
+    \item \textbf{Comprehensive Results Presentation:} Analysis results are aggregated and presented in a unified, structured format including:
+    \begin{itemize}
+        \item Code execution output and error messages
+        \item AI-generated suggestions and quality assessments
+        \item Cyclomatic complexity metrics and maintainability scores
+        \item Security analysis and potential vulnerability identification
+        \item Performance insights and optimization recommendations
+    \end{itemize}
+    
+    \item \textbf{User Account Management:} The system provides secure user registration, authentication, and session management using JWT tokens. Users can track their submission history, view past analysis results, and monitor their coding progress over time.
+    
+    \item \textbf{Database Persistence:} All user data, code submissions, and analysis results are securely stored in a relational database with proper indexing and query optimization for efficient retrieval and historical analysis.
+    
+    \item \textbf{RESTful API Interface:} The system exposes a comprehensive REST API for code submission, analysis retrieval, user management, and system monitoring, enabling integration with external tools and future extensions.
+\end{itemize}
+
+\section{Non-functional Requirements}
+The system adheres to rigorous non-functional requirements to ensure security, performance, and scalability.
+
+\begin{itemize}
+    \item \textbf{Security:} 
+    \begin{itemize}
+        \item Complete isolation of code execution using Docker containers with restricted privileges
+        \item Secure user authentication and session management using JWT tokens
+        \item Input validation and sanitization to prevent code injection attacks
+        \item Encrypted data transmission using HTTPS protocols
+        \item Secure database storage with encrypted sensitive information
+    \end{itemize}
+    
+    \item \textbf{Performance:} 
+    \begin{itemize}
+        \item Code execution completion within 30 seconds for typical submissions
+        \item AI analysis response time under 10 seconds for standard code snippets
+        \item Database query response time under 2 seconds for user data retrieval
+        \item Automatic container cleanup within 5 seconds of execution completion
+    \end{itemize}
+    
+    \item \textbf{Scalability:} 
+    \begin{itemize}
+        \item Support for 50+ concurrent users with maintained performance
+        \item Horizontal scaling capability through containerized deployment
+        \item Efficient resource management to handle multiple simultaneous code executions
+        \item Database optimization to support growing user base and submission history
+    \end{itemize}
+    
+    \item \textbf{Reliability:} 
+    \begin{itemize}
+        \item 99.5\% uptime availability for web services
+        \item Graceful handling of AI service outages with appropriate fallback mechanisms
+        \item Robust error handling and logging for debugging and monitoring
+        \item Automatic recovery from container execution failures
+    \end{itemize}
+    
+    \item \textbf{Portability:} 
+    \begin{itemize}
+        \item Cross-platform web access through modern browsers (Chrome, Firefox, Edge, Safari)
+        \item Docker-based deployment supporting Linux, Windows, and macOS host systems
+        \item Database compatibility with PostgreSQL and SQLite for different deployment scenarios
+    \end{itemize}
+    
+    \item \textbf{Maintainability:} 
+    \begin{itemize}
+        \item Modular architecture with clear separation of concerns
+        \item Comprehensive API documentation and code comments
+        \item Automated testing suite with high code coverage
+        \item Configuration management for easy deployment and updates
+    \end{itemize}
+    
+    \item \textbf{Extensibility:} 
+    \begin{itemize}
+        \item Plugin architecture for adding new programming language support
+        \item Configurable AI analysis prompts and response processing
+        \item Extensible database schema for additional analysis metrics
+        \item API design supporting future feature additions
+    \end{itemize}
+    
+    \item \textbf{Usability:} 
+    \begin{itemize}
+        \item Intuitive web interface with responsive design for mobile and desktop
+        \item Clear presentation of analysis results with explanatory information
+        \item User-friendly error messages and guidance for common issues
+        \item Accessible design following web accessibility standards
+    \end{itemize}
+\end{itemize}
+
+\section{Hardware Requirements}
+The hardware requirements ensure optimal performance for both development and production deployment environments.
+
+\subsection{Development Environment}
+\begin{enumerate}
+    \item \textbf{Processor:} Multi-core CPU (Intel i5/AMD Ryzen 5 or higher) with at least 2.5 GHz base frequency for efficient Docker container management and concurrent code execution.
+    \item \textbf{Memory:} Minimum 8 GB RAM; 16 GB recommended for development with multiple containers and IDE usage. Each Docker container requires approximately 128-512 MB depending on the programming language runtime.
+    \item \textbf{Storage:} Minimum 20 GB available disk space (SSD recommended) for Docker images, source code, database files, and temporary execution artifacts.
+    \item \textbf{Network:} Reliable internet connection for Docker image downloads, AI API calls to Google Gemini, and development tool updates.
+\end{enumerate}
+
+\subsection{Production Environment}
+\begin{enumerate}
+    \item \textbf{Processor:} Multi-core server CPU (Intel Xeon/AMD EPYC or equivalent) with at least 4 cores for handling concurrent user requests and container orchestration.
+    \item \textbf{Memory:} Minimum 16 GB RAM; 32 GB or more recommended for production deployment supporting 50+ concurrent users with multiple container executions.
+    \item \textbf{Storage:} Minimum 100 GB SSD storage for application files, Docker images, database, and user submission history. Additional storage may be required based on user growth and retention policies.
+    \item \textbf{Network:} High-speed internet connection with sufficient bandwidth for AI API calls and user traffic. Consider CDN integration for global accessibility.
+\end{enumerate}
+
+\section{Software Requirements}
+The software stack is designed for security, performance, and modern web application standards.
+
+\subsection{Core Platform Requirements}
+\begin{enumerate}
+    \item \textbf{Operating System:} 
+    \begin{itemize}
+        \item Linux (Ubuntu 20.04 LTS or newer, CentOS 8+, or equivalent) for production deployment
+        \item Windows 10/11 or macOS for development environments
+        \item Docker Desktop support for cross-platform development
+    \end{itemize}
+    
+    \item \textbf{Container Runtime:} 
+    \begin{itemize}
+        \item Docker Engine 20.0+ for container management and code execution isolation
+        \item Docker Compose for multi-container application orchestration
+        \item Container registry access for pulling language-specific runtime images
+    \end{itemize}
+    
+    \item \textbf{Programming Language Runtimes:} 
+    \begin{itemize}
+        \item Python 3.8+ for application backend and AI integration
+        \item Node.js 18+ for JavaScript code execution support
+        \item OpenJDK 11+ for Java code compilation and execution
+        \item GCC 9+ for C++ code compilation and execution
+        \item Go 1.18+ for Go code compilation and execution
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Backend Framework and Libraries}
+\begin{enumerate}
+    \item \textbf{Web Framework:} FastAPI 0.68+ for high-performance REST API development with automatic documentation generation and async support.
+    
+    \item \textbf{Database Management:} 
+    \begin{itemize}
+        \item SQLAlchemy 1.4+ ORM for database abstraction and relationship management
+        \item PostgreSQL 12+ for production database (recommended)
+        \item SQLite 3.35+ for development and testing environments
+    \end{itemize}
+    
+    \item \textbf{AI Integration:} 
+    \begin{itemize}
+        \item Google Generative AI SDK (google-generativeai) for Gemini AI integration
+        \item HTTP client libraries (httpx, requests) for API communication
+        \item JSON processing libraries for structured AI response handling
+    \end{itemize}
+    
+    \item \textbf{Code Analysis Libraries:} 
+    \begin{itemize}
+        \item Lizard library for cyclomatic complexity analysis across multiple languages
+        \item Docker SDK for Python for container management and execution control
+        \item Language-specific parsing libraries as needed
+    \end{itemize}
+    
+    \item \textbf{Security and Authentication:} 
+    \begin{itemize}
+        \item PyJWT for JSON Web Token implementation
+        \item Passlib with bcrypt for secure password hashing
+        \item Python-multipart for secure file upload handling
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Frontend and User Interface}
+\begin{enumerate}
+    \item \textbf{Web Technologies:} 
+    \begin{itemize}
+        \item HTML5, CSS3, and modern JavaScript (ES6+) for user interface
+        \item Responsive design frameworks (Bootstrap, Tailwind CSS) for cross-device compatibility
+        \item Code editor integration (Monaco Editor, CodeMirror) for syntax highlighting and editing
+    \end{itemize}
+    
+    \item \textbf{Browser Compatibility:} 
+    \begin{itemize}
+        \item Chrome 90+, Firefox 88+, Safari 14+, Edge 90+ for optimal performance
+        \item Progressive Web App (PWA) capabilities for enhanced user experience
+        \item Mobile browser support for tablet and smartphone access
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Development and Deployment Tools}
+\begin{enumerate}
+    \item \textbf{Version Control:} Git 2.25+ for source code management and collaboration.
+    
+    \item \textbf{Testing Framework:} 
+    \begin{itemize}
+        \item Pytest 6.0+ for comprehensive unit and integration testing
+        \item Coverage.py for code coverage analysis and reporting
+        \item Docker-based testing for execution environment validation
+    \end{itemize}
+    
+    \item \textbf{Development Environment:} 
+    \begin{itemize}
+        \item Visual Studio Code, PyCharm, or equivalent IDE with Python and Docker support
+        \item Python virtual environment (venv, conda) for dependency isolation
+        \item Docker Desktop for local container development and testing
+    \end{itemize}
+    
+    \item \textbf{Deployment and Monitoring:} 
+    \begin{itemize}
+        \item NGINX or Apache for reverse proxy and static file serving
+        \item Gunicorn or Uvicorn for WSGI/ASGI application serving
+        \item Logging frameworks (Python logging, structured logging) for monitoring and debugging
+        \item Environment variable management for configuration security
+    \end{itemize}
+\end{enumerate}
+
+\section{External Service Dependencies}
+The system relies on specific external services that must be available and properly configured:
+
+\begin{enumerate}
+    \item \textbf{Google Gemini AI API:} 
+    \begin{itemize}
+        \item Valid API key with appropriate usage quotas
+        \item Network connectivity to Google AI services
+        \item Fallback mechanisms for service unavailability
+    \end{itemize}
+    
+    \item \textbf{Docker Hub Registry:} 
+    \begin{itemize}
+        \item Access to official language runtime images (python, node, openjdk, gcc, golang)
+        \item Sufficient bandwidth for initial image downloads and updates
+        \item Local image caching to reduce dependency on external registry
+    \end{itemize}
+    
+    \item \textbf{Database Services:} 
+    \begin{itemize}
+        \item PostgreSQL server for production deployment
+        \item Database backup and recovery procedures
+        \item Connection pooling and performance optimization
+    \end{itemize}
+\end{enumerate}
+
+\section{Compliance and Security Requirements}
+The system must adhere to security and compliance standards appropriate for educational and professional use:
+
+\begin{enumerate}
+    \item \textbf{Data Protection:} Compliance with applicable data protection regulations (GDPR, CCPA) for user data handling and privacy.
+    
+    \item \textbf{Security Standards:} Implementation of OWASP Top 10 security practices and regular security assessments.
+    
+    \item \textbf{Code Execution Security:} Strict container isolation, resource limits, and monitoring to prevent malicious code execution.
+    
+    \item \textbf{API Security:} Rate limiting, input validation, and authentication for all API endpoints.
+    
+    \item \textbf{Audit Logging:} Comprehensive logging of user actions, system events, and security-relevant activities for monitoring and compliance.
+\end{enumerate}

@@ -1,0 +1,754 @@
+% CodeSense AI - Complete Testing Documentation
+% Copy and paste this document into Overleaf.com
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{enumitem}
+\geometry{a4paper, margin=0.7in}
+
+\begin{document}
+
+\title{CodeSense AI - Complete Testing Documentation}
+\author{Software Testing Team}
+\date{\today}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Scope of Testing}
+
+\subsection{Testing Objectives}
+The primary objective is to ensure the CodeSense AI application functions correctly across all components including code analysis, user authentication, Docker-based code execution, and API endpoints.
+
+\subsection{In-Scope Testing Areas}
+
+\begin{longtable}{|p{4cm}|p{8cm}|p{2cm}|}
+\hline
+\textbf{Component} & \textbf{Testing Areas} & \textbf{Priority} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Component} & \textbf{Testing Areas} & \textbf{Priority} \\
+\hline
+\endhead
+
+\textbf{Core Application Logic} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item Code complexity analysis (Lizard integration)
+\item Time and space complexity estimation
+\item Overall quality score calculation
+\item Script-level complexity for multiple languages
+\item Error handling and edge cases
+\end{itemize} & High \\
+\hline
+
+\textbf{Authentication \& Authorization} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item User registration and login
+\item JWT token creation and validation
+\item Password hashing and verification
+\item User session management
+\item Protected endpoint access control
+\end{itemize} & High \\
+\hline
+
+\textbf{Database Operations} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item User CRUD operations
+\item Code submission storage and retrieval
+\item Database connection handling
+\item Data integrity and constraints
+\item Query performance (basic)
+\end{itemize} & High \\
+\hline
+
+\textbf{Docker Code Execution} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item Container creation and management
+\item Code execution in isolated environments
+\item stdout/stderr capture
+\item Security constraints (memory, CPU, network)
+\item Multi-language support (Python, JS, Java, C++, Go)
+\item Error handling and timeouts
+\end{itemize} & High \\
+\hline
+
+\textbf{API Endpoints} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item Request/response validation
+\item HTTP status codes
+\item Authentication requirements
+\item Input sanitization
+\item Error responses
+\end{itemize} & High \\
+\hline
+
+\textbf{Business Logic Integration} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item Complete analysis workflow
+\item Docker execution → Gemini analysis flow
+\item Conditional Gemini submission
+\item Response formatting and structure
+\end{itemize} & Medium \\
+\hline
+
+\textbf{Data Models \& Validation} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item Pydantic model validation
+\item SQLAlchemy model relationships
+\item Data type constraints
+\item Required field validation
+\end{itemize} & Medium \\
+\hline
+
+\end{longtable}
+
+\subsection{Out-of-Scope Testing Areas}
+
+\begin{longtable}{|p{4cm}|p{8cm}|p{2cm}|}
+\hline
+\textbf{Component} & \textbf{Excluded Areas} & \textbf{Reason} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Component} & \textbf{Excluded Areas} & \textbf{Reason} \\
+\hline
+\endhead
+
+\textbf{External Dependencies} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item Google Gemini AI API responses
+\item Docker Hub image availability
+\item Network connectivity issues
+\item Third-party service outages
+\end{itemize} & External Control \\
+\hline
+
+\textbf{Infrastructure \& Deployment} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item Server deployment configurations
+\item Load balancer behavior
+\item SSL/TLS certificate handling
+\item DNS resolution
+\item CDN performance
+\end{itemize} & Infrastructure Team \\
+\hline
+
+\textbf{Frontend/UI Testing} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item React component rendering
+\item Browser compatibility
+\item JavaScript execution in browsers
+\item UI/UX interactions
+\item Monaco Editor functionality
+\end{itemize} & Frontend Team \\
+\hline
+
+\textbf{Performance \& Scalability} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item High-load stress testing
+\item Concurrent user simulation
+\item Database performance under load
+\item Memory leak detection
+\item Long-running process monitoring
+\end{itemize} & Performance Team \\
+\hline
+
+\textbf{Security Penetration} & 
+\begin{itemize}[leftmargin=*,nosep]
+\item SQL injection attempts
+\item XSS vulnerability scanning
+\item CSRF attack simulation
+\item Brute force attack testing
+\item Advanced security auditing
+\end{itemize} & Security Team \\
+\hline
+
+\end{longtable}
+
+\section{Test Strategies}
+
+\subsection{Testing Approach}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|p{6cm}|c|}
+\hline
+\textbf{Test Type} & \textbf{Effort \%} & \textbf{Description} & \textbf{Tools} \\
+\hline
+Unit Tests & 70\% & Individual function and class testing with mocked dependencies & pytest, unittest.mock \\
+\hline
+Integration Tests & 25\% & API endpoint workflows, database integration, service communication & pytest, TestClient \\
+\hline
+Performance Tests & 5\% & Response time validation, basic load testing, timeout handling & pytest-benchmark \\
+\hline
+\end{tabular}
+\caption{Testing Strategy Distribution}
+\end{table}
+
+\subsection{Test-Driven Development (TDD)}
+\begin{enumerate}
+\item Write failing tests first
+\item Implement minimum code to pass
+\item Refactor and optimize
+\item Repeat cycle
+\end{enumerate}
+
+\subsection{Mocking Strategy}
+\begin{itemize}
+\item Mock external APIs (Gemini AI)
+\item Mock Docker operations in unit tests
+\item Use in-memory databases for testing
+\item Mock file system operations
+\end{itemize}
+
+\subsection{Coverage Targets}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Component} & \textbf{Target Coverage} & \textbf{Priority} \\
+\hline
+Database Operations & 90\%+ & High \\
+\hline
+Authentication & 85\%+ & High \\
+\hline
+Docker Executor & 80\%+ & High \\
+\hline
+API Endpoints & 85\%+ & High \\
+\hline
+Business Logic & 80\%+ & Medium \\
+\hline
+Utility Functions & 70\%+ & Medium \\
+\hline
+\textbf{Overall Project} & \textbf{80\%+} & \textbf{High} \\
+\hline
+\end{tabular}
+\caption{Code Coverage Targets}
+\end{table}
+
+\section{Test Environment}
+
+\subsection{Hardware Requirements}
+
+\subsubsection{Minimum Requirements}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Component} & \textbf{Specification} & \textbf{Reason} \\
+\hline
+CPU & 2 cores, 2.0 GHz & Docker container execution \\
+\hline
+RAM & 4 GB & Multiple containers + database \\
+\hline
+Storage & 10 GB free space & Docker images + test data \\
+\hline
+Network & Broadband internet & Docker image downloads \\
+\hline
+\end{tabular}
+\caption{Minimum Hardware Requirements}
+\end{table}
+
+\subsubsection{Recommended Requirements}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{5cm}|}
+\hline
+\textbf{Component} & \textbf{Specification} & \textbf{Reason} \\
+\hline
+CPU & 4+ cores, 3.0+ GHz & Faster test execution \\
+\hline
+RAM & 8+ GB & Parallel test execution \\
+\hline
+Storage & 20+ GB SSD & Faster I/O operations \\
+\hline
+Network & High-speed internet & Quick image pulls \\
+\hline
+\end{tabular}
+\caption{Recommended Hardware Requirements}
+\end{table}
+
+\subsection{Software Requirements}
+
+\subsubsection{Core Dependencies}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{4cm}|p{3cm}|}
+\hline
+\textbf{Software} & \textbf{Version} & \textbf{Purpose} & \textbf{Verification} \\
+\hline
+Python & 3.8+ & Runtime environment & \texttt{python --version} \\
+\hline
+Docker & 20.0+ & Container execution & \texttt{docker --version} \\
+\hline
+PostgreSQL & 12+ & Database (production) & \texttt{psql --version} \\
+\hline
+Git & 2.0+ & Version control & \texttt{git --version} \\
+\hline
+\end{tabular}
+\caption{Core Software Dependencies}
+\end{table}
+
+\subsubsection{Docker Images Required}
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|l|p{4cm}|}
+\hline
+\textbf{Language} & \textbf{Image} & \textbf{Size} & \textbf{Purpose} \\
+\hline
+Python & \texttt{python:3.11-slim} & ~150MB & Python code execution \\
+\hline
+JavaScript & \texttt{node:22-alpine} & ~120MB & Node.js execution \\
+\hline
+Java & \texttt{openjdk:22-jre-slim} & ~200MB & Java compilation/execution \\
+\hline
+C++ & \texttt{gcc:latest} & ~300MB & C++ compilation \\
+\hline
+Go & \texttt{golang:1.22-alpine} & ~400MB & Go compilation/execution \\
+\hline
+\end{tabular}
+\caption{Required Docker Images}
+\end{table}
+
+\section{Hardware and Software Configurations}
+
+\subsection{Development Environment Setup}
+
+\begin{lstlisting}[language=bash, caption=Environment Setup Commands]
+# Clone repository
+git clone <repository-url>
+cd CodeSense-AI
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# OR
+venv\Scripts\activate     # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+pip install -r requirements-test.txt
+
+# Setup environment variables
+cp .env.example .env
+# Edit .env with your configurations
+\end{lstlisting}
+
+\subsection{Database Configuration}
+
+\begin{lstlisting}[language=bash, caption=Database Setup]
+# Option 1: PostgreSQL (Production-like)
+sudo apt-get install postgresql postgresql-contrib
+sudo -u postgres createdb codesense_ai_test
+sudo -u postgres createuser testuser --pwprompt
+
+# Option 2: SQLite (Testing only - automatic)
+# Tests use in-memory SQLite by default
+\end{lstlisting}
+
+\subsection{Docker Configuration}
+
+\begin{lstlisting}[language=bash, caption=Docker Setup]
+# Install Docker Desktop or Docker Engine
+# Verify installation
+docker --version
+docker run hello-world
+
+# Pull required images (optional - auto-pulled during tests)
+docker pull python:3.11-slim
+docker pull node:22-alpine
+docker pull openjdk:22-jre-slim
+docker pull gcc:latest
+docker pull golang:1.22-alpine
+\end{lstlisting}
+
+\subsection{Environment Variables for Testing}
+
+\begin{lstlisting}[language=bash, caption=Test Environment Variables]
+# .env.test
+SECRET_KEY=test-secret-key-change-in-production
+GEMINI_API_KEY=test-gemini-key-or-mock
+DATABASE_URL=sqlite:///:memory:
+DOCKER_HOST=unix:///var/run/docker.sock
+LOG_LEVEL=DEBUG
+\end{lstlisting}
+
+\section{Test Tools Used}
+
+\subsection{Primary Testing Tools}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Tool} & \textbf{Version} & \textbf{Purpose} \\
+\hline
+pytest & 7.4+ & Main testing framework \\
+\hline
+pytest-cov & 4.1+ & Code coverage reporting \\
+\hline
+pytest-mock & 3.12+ & Mocking utilities \\
+\hline
+pytest-asyncio & 0.21+ & Async test support \\
+\hline
+unittest.mock & Built-in & Python mocking library \\
+\hline
+Faker & 20.1+ & Test data generation \\
+\hline
+httpx & Latest & HTTP client for API testing \\
+\hline
+TestClient & FastAPI & API endpoint testing \\
+\hline
+\end{tabular}
+\caption{Primary Testing Tools}
+\end{table}
+
+\subsection{Supporting Tools}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Tool} & \textbf{Version} & \textbf{Purpose} \\
+\hline
+SQLAlchemy & 1.4+ & Database ORM for testing \\
+\hline
+Docker SDK & Latest & Docker container management \\
+\hline
+Coverage.py & 7.3+ & Coverage measurement \\
+\hline
+Black & Latest & Code formatting \\
+\hline
+Flake8 & Latest & Code linting \\
+\hline
+Pre-commit & Latest & Git hooks for quality \\
+\hline
+\end{tabular}
+\caption{Supporting Tools}
+\end{table}
+
+\subsection{Test Execution Commands}
+
+\begin{lstlisting}[language=bash, caption=Test Execution Commands]
+# Activate virtual environment
+.\venv\Scripts\activate.ps1
+
+# Install test dependencies
+pip install -r requirements-test.txt
+
+# Run all unit tests
+pytest tests/test_database.py tests/test_auth.py \
+       tests/test_docker_executor.py tests/test_app.py -v
+
+# Run with coverage report
+pytest tests/test_database.py tests/test_auth.py \
+       tests/test_docker_executor.py tests/test_app.py \
+       -v --cov=. --cov-report=html
+
+# Run with coverage threshold
+pytest tests/test_database.py tests/test_auth.py \
+       tests/test_docker_executor.py tests/test_app.py \
+       -v --cov=. --cov-report=html --cov-fail-under=70
+\end{lstlisting}
+
+\section{Acceptance Criteria}
+
+\subsection{Functional Acceptance Criteria}
+
+\begin{longtable}{|c|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{ID} & \textbf{Criteria} & \textbf{Acceptance Condition} & \textbf{Priority} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Criteria} & \textbf{Acceptance Condition} & \textbf{Priority} \\
+\hline
+\endhead
+
+AC-001 & User Authentication & Users can register, login, and access protected endpoints with valid JWT tokens & High \\
+\hline
+
+AC-002 & Code Analysis & System analyzes code complexity and returns metrics for supported languages & High \\
+\hline
+
+AC-003 & Docker Execution & Code executes safely in isolated Docker containers with proper output capture & High \\
+\hline
+
+AC-004 & Database Operations & All CRUD operations work correctly with proper data validation & High \\
+\hline
+
+AC-005 & API Endpoints & All endpoints return correct HTTP status codes and response formats & High \\
+\hline
+
+AC-006 & Error Handling & System gracefully handles errors and returns appropriate error messages & High \\
+\hline
+
+AC-007 & Input Validation & All user inputs are validated and sanitized properly & High \\
+\hline
+
+AC-008 & Security & JWT tokens expire correctly and unauthorized access is prevented & High \\
+\hline
+
+AC-009 & Multi-language Support & System supports Python, JavaScript, Java, C++, and Go code execution & Medium \\
+\hline
+
+AC-010 & Performance & API responses return within acceptable time limits (<5 seconds) & Medium \\
+\hline
+
+\end{longtable}
+
+\subsection{Technical Acceptance Criteria}
+
+\begin{longtable}{|c|p{5cm}|p{6cm}|p{2cm}|}
+\hline
+\textbf{ID} & \textbf{Criteria} & \textbf{Acceptance Condition} & \textbf{Priority} \\
+\hline
+\endfirsthead
+\hline
+\textbf{ID} & \textbf{Criteria} & \textbf{Acceptance Condition} & \textbf{Priority} \\
+\hline
+\endhead
+
+TAC-001 & Code Coverage & Overall test coverage must be ≥80\% & High \\
+\hline
+
+TAC-002 & Test Pass Rate & All unit tests must pass (100\% pass rate) & High \\
+\hline
+
+TAC-003 & Database Tests & Database module coverage ≥90\% & High \\
+\hline
+
+TAC-004 & Authentication Tests & Authentication module coverage ≥85\% & High \\
+\hline
+
+TAC-005 & Docker Tests & Docker executor coverage ≥80\% & High \\
+\hline
+
+TAC-006 & API Tests & API endpoint coverage ≥85\% & High \\
+\hline
+
+TAC-007 & Test Execution Time & All tests complete within 3 minutes & Medium \\
+\hline
+
+TAC-008 & Memory Usage & Test execution uses <2GB RAM & Medium \\
+\hline
+
+TAC-009 & No Test Warnings & Tests run without deprecation warnings & Low \\
+\hline
+
+TAC-010 & Clean Test Environment & All tests clean up resources properly & Medium \\
+\hline
+
+\end{longtable}
+
+\subsection{Quality Gates}
+
+\begin{itemize}
+\item All tests must pass before deployment
+\item Coverage must not drop below 80\%
+\item No skipped tests in production builds
+\item Performance tests must meet SLA requirements
+\item Security tests must pass vulnerability checks
+\item All critical and high-priority acceptance criteria must be met
+\end{itemize}
+
+\subsection{Test Completion Criteria}
+
+\begin{enumerate}
+\item All planned test cases executed
+\item All critical defects resolved
+\item Code coverage targets achieved
+\item Performance benchmarks met
+\item Security requirements validated
+\item Documentation updated and reviewed
+\item Test artifacts archived
+\end{enumerate}
+
+\section{Performance Benchmarks}
+
+\subsection{Expected Test Performance}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Test Category} & \textbf{Count} & \textbf{Duration} & \textbf{Memory} \\
+\hline
+Unit Tests & ~50 tests & <30 seconds & <500MB \\
+\hline
+Integration Tests & ~15 tests & <60 seconds & <1GB \\
+\hline
+Docker Tests & ~20 tests & <120 seconds & <2GB \\
+\hline
+\textbf{Total} & \textbf{~85 tests} & \textbf{<3 minutes} & \textbf{<2GB} \\
+\hline
+\end{tabular}
+\caption{Expected Test Performance}
+\end{table}
+
+\section{AI Integration - Google Gemini Configuration}
+
+\subsection{Gemini Model Specification}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{8cm}|}
+\hline
+\textbf{Parameter} & \textbf{Value} \\
+\hline
+Model Name & \texttt{models/gemini-flash-latest} \\
+\hline
+API Provider & Google Generative AI \\
+\hline
+Purpose & Code analysis and quality assessment \\
+\hline
+Input Format & Code + Language + Execution Output \\
+\hline
+Output Format & Structured JSON response \\
+\hline
+Generation Config & Temperature: 0.1, Max Output Tokens: 2048 \\
+\hline
+Safety Settings & Default Google AI safety filters \\
+\hline
+\end{tabular}
+\caption{Gemini AI Model Configuration}
+\end{table}
+
+\subsection{Gemini Prompt Template}
+
+The following prompt template is used to analyze code with Google Gemini AI:
+
+\begin{lstlisting}[language=text, caption=Gemini AI Prompt Template, breaklines=true, basicstyle=\small\ttfamily]
+Analyze this {language} code and return JSON:
+
+```{language}
+{code}
+```
+
+Actual execution output:
+```
+{code_output}
+```
+
+Return exactly this JSON format:
+{
+  "errors": [{"line": number, "message": "error description", 
+             "severity": "error|warning|info"}],
+  "suggestions": ["suggestion text"],
+  "optimizations": ["optimization text"],
+  "output": "analysis of the code behavior",
+  "quality_metrics": {
+    "summary": "brief summary of code quality",
+    "complexity_issues": ["issue_1", "issue_2"],
+    "security_issues": ["issue_1", "issue_2"],
+    "recommendations": ["recommendation_1", "recommendation_2"],
+    "security_analysis": "security assessment summary"
+  }
+}
+
+Instructions:
+1. Check for syntax errors, logic issues, and best practices
+2. The code has been successfully executed and the actual output 
+   is provided above
+3. For the "output" field: Provide analysis of what the code does 
+   based on the actual execution results
+4. Compare expected vs actual behavior if relevant
+5. For quality_metrics: Analyze code complexity, maintainability, 
+   security issues, and provide actionable recommendations
+6. Estimate cyclomatic complexity based on control flow structures 
+   (if/else, loops, functions)
+7. Assess maintainability based on code structure, naming, 
+   and organization
+8. Identify potential security vulnerabilities (SQL injection, XSS, 
+   unsafe operations, etc.)
+9. Since the code executed successfully, focus on code quality, 
+   style, and optimization suggestions
+
+Note: The actual execution output is available, so focus on code 
+quality analysis rather than output prediction.
+\end{lstlisting}
+
+\subsection{AI Integration Workflow}
+
+\begin{enumerate}
+\item \textbf{Code Execution Phase}: User code is first executed in Docker container
+\item \textbf{Execution Validation}: Only proceed with AI analysis if execution succeeds
+\item \textbf{Prompt Construction}: Combine code, language, and execution output
+\item \textbf{Gemini API Call}: Send structured prompt to Gemini Flash model
+\item \textbf{Response Processing}: Parse JSON response and handle safety filters
+\item \textbf{Result Integration}: Merge AI analysis with complexity metrics
+\item \textbf{Error Handling}: Graceful fallback for API failures or blocked content
+\end{enumerate}
+
+\subsection{AI Response Structure}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{3cm}|p{6cm}|}
+\hline
+\textbf{Field} & \textbf{Type} & \textbf{Description} \\
+\hline
+errors & Array & Syntax errors, logic issues with line numbers \\
+\hline
+suggestions & Array & Code improvement recommendations \\
+\hline
+optimizations & Array & Performance optimization suggestions \\
+\hline
+output & String & Analysis of code behavior and execution results \\
+\hline
+quality\_metrics & Object & Comprehensive code quality assessment \\
+\hline
+\end{tabular}
+\caption{Gemini AI Response Structure}
+\end{table}
+
+\subsection{AI Testing Strategy}
+
+\begin{itemize}
+\item \textbf{Mocked Responses}: All Gemini API calls are mocked in unit tests
+\item \textbf{Response Validation}: Test JSON parsing and error handling
+\item \textbf{Safety Filter Testing}: Handle blocked content scenarios
+\item \textbf{Timeout Testing}: Validate API timeout and retry logic
+\item \textbf{Integration Testing}: End-to-end workflow with real API (optional)
+\end{itemize}
+
+\section{Risk Assessment}
+
+\subsection{High Risk Areas (Extra Testing Required)}
+\begin{itemize}
+\item Docker container security
+\item JWT token validation
+\item SQL injection prevention
+\item Code execution timeouts
+\item Gemini API response validation
+\item AI safety filter handling
+\end{itemize}
+
+\subsection{Medium Risk Areas}
+\begin{itemize}
+\item File upload handling
+\item Error message exposure
+\item Session management
+\item Input validation
+\item AI prompt injection
+\item API rate limiting
+\end{itemize}
+
+\subsection{Low Risk Areas}
+\begin{itemize}
+\item Static content serving
+\item Basic CRUD operations
+\item Configuration loading
+\item Logging functionality
+\end{itemize}
+
+\end{document}
